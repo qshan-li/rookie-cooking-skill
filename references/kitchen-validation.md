@@ -34,6 +34,26 @@
 
 可用 `scripts/check_skill_completeness.py --require-benchmark-validations 3` 检查 Step 10 是否达到最低实测门槛。该命令在没有 3 道标杆菜 `validated` 记录时必须失败。
 
+可用 `scripts/apply_kitchen_validation.py <recipe.md> <record.json> --mark-validated` 写入实测记录并更新状态。只有 `record.json` 的 `conclusion` 为 `validated-candidate` 时才允许 `--mark-validated`。
+
+JSON 字段名：
+
+```json
+{
+  "date": "2026-05-26",
+  "cook": "tester",
+  "environment": "gas stove, wok, no thermometer",
+  "servings": "2",
+  "ingredient_weights": "番茄 360 g，鸡蛋 150 g",
+  "step_times": "18 分钟",
+  "heat_notes": "中火炒番茄 3 分钟",
+  "state_checks": "番茄出汁 80 ml，鸡蛋表面湿润时盛出",
+  "failure_points": "无",
+  "changes": "无需修改",
+  "conclusion": "validated-candidate"
+}
+```
+
 ## 不允许
 
 - 不允许根据文本自查标记 `validated`。
