@@ -71,6 +71,20 @@ class KitchenValidationRulesTest(unittest.TestCase):
 
 
 class RepositoryChecksTest(unittest.TestCase):
+    def test_repository_check_requires_ten_principle_cards(self):
+        checker = load_checker()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            (root / "recipes" / "chinese-home").mkdir(parents=True)
+            (root / "references").mkdir()
+            (root / "references" / "source-notes.md").write_text("", encoding="utf-8")
+
+            result = checker.check_repository(root)
+
+        self.assertFalse(result.ok)
+        self.assertIn("principle_count=0 required=10", result.errors)
+
     def test_repository_check_requires_at_least_twenty_recipes(self):
         checker = load_checker()
 

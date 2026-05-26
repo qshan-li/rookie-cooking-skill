@@ -19,6 +19,7 @@ BENCHMARK_RECIPE_FILENAMES = {
 }
 
 MIN_RECIPE_COUNT = 20
+MIN_PRINCIPLE_COUNT = 10
 
 BANNED_UNQUALIFIED_TERMS = (
     "适量",
@@ -65,6 +66,11 @@ class CheckResult:
 def recipe_paths(root: Path) -> list[Path]:
     recipes_root = root / "recipes"
     return sorted(recipes_root.glob("*/*.md"))
+
+
+def principle_paths(root: Path) -> list[Path]:
+    principles_root = root / "principles"
+    return sorted(principles_root.glob("*.md"))
 
 
 def first_heading(markdown_text: str) -> str:
@@ -138,6 +144,10 @@ def check_repository(root: Path, required_benchmark_validations: int = 0) -> Che
         return CheckResult(errors=["missing references/source-notes.md"])
 
     source_notes = source_notes_path.read_text(encoding="utf-8")
+    principles = principle_paths(root)
+    if len(principles) < MIN_PRINCIPLE_COUNT:
+        errors.append(f"principle_count={len(principles)} required={MIN_PRINCIPLE_COUNT}")
+
     recipes = recipe_paths(root)
     if not recipes:
         errors.append("no recipe files found under recipes/*/*.md")
