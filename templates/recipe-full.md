@@ -9,7 +9,12 @@
 - 热量估算：{{calories_estimate}}
 - 设备：{{equipment}}
 - 成品目标：{{target_result}}
-- 已使用偏好 / 假设：{{applied_preferences_or_defaults}}
+- 已使用偏好 / 假设：
+  - 人数：{{servings_or_profile_servings}}
+  - 设备：{{applied_equipment}}
+  - 口味：{{applied_taste}}
+  - 家庭成员：{{applied_household_members_or_none}}
+  - 历史反馈：{{applied_feedback_or_none}}
 
 ## 原料和工具
 

@@ -49,12 +49,14 @@ rookie-cooking-skill/
     wok-heat.md
     food-safety-temperature.md
   recipes/
-    chinese-home/
+    vegetable/
       tomato-egg.md
-      qingjiao-rousi.md
-      steamed-egg.md
       stir-fried-greens.md
+    meat/
+      qingjiao-rousi.md
       hongshaorou.md
+    soup/
+      steamed-egg.md
   references/
     defaults.md
     heat-levels.md
@@ -190,11 +192,11 @@ rookie-cooking-skill/
 执行：
 
 - 按完整解释版模板创建：
-  - `recipes/chinese-home/tomato-egg.md`
-  - `recipes/chinese-home/qingjiao-rousi.md`
-  - `recipes/chinese-home/steamed-egg.md`
-  - `recipes/chinese-home/stir-fried-greens.md`
-  - `recipes/chinese-home/hongshaorou.md`
+  - `recipes/vegetable/tomato-egg.md`
+  - `recipes/meat/qingjiao-rousi.md`
+  - `recipes/soup/steamed-egg.md`
+  - `recipes/vegetable/stir-fried-greens.md`
+  - `recipes/meat/hongshaorou.md`
 - 每道菜同时包含完整解释版和厨房执行版。
 - 每道菜引用相关原理卡。
 - 每道菜包含通用失败诊断和单菜专属失败诊断。
@@ -370,7 +372,7 @@ rookie-cooking-skill/
 
 第四批 commit：
 
-- `recipes/chinese-home/` 5 道标杆菜
+- `recipes/` 5 道标杆菜（按菜品类型分目录）
 - 菜谱 review 记录
 
 第五批 commit：

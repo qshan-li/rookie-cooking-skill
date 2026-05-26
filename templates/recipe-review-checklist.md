@@ -4,6 +4,12 @@
 Review 日期：{{review_date}}  
 状态：`draft` / `passed` / `validated`
 
+状态语义：
+
+- `draft`：用户导入或新建，尚未完成 review 的菜谱。
+- `passed`：可信来源菜谱或人工 review 后达到执行文档标准。HowToCook 官方来源迁移菜谱应使用此状态。
+- `validated`：用户实际照做并认可结果，且已写入厨房实测记录。
+
 ## 1. 执行完整性
 
 - [ ] 份量、总时间、主动操作时间、难度明确。

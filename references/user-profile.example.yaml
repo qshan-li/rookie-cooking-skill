@@ -1,0 +1,51 @@
+profile_version: 1
+updated_at: "2026-05-26"
+
+defaults:
+  servings: 2
+  preferred_output: full-plus-kitchen
+
+taste:
+  salt_level: normal
+  oil_level: normal
+  spice_level: mild
+  sweetness: normal
+  sourness: normal
+
+equipment:
+  stove_type: unknown
+  pan_type: ordinary-wok
+  has_scale: true
+  has_thermometer: false
+  has_oven: unknown
+  has_air_fryer: unknown
+
+dislikes:
+  ingredients: []
+  aromatics: []
+
+household_members:
+  - member_id: self
+    display_name: 我
+    role: primary
+    taste:
+      salt_level: normal
+      oil_level: normal
+      spice_level: mild
+    dislikes:
+      ingredients: []
+      aromatics: []
+    sensitive_constraints:
+      allergies: []
+      health_goals: []
+      pregnancy_or_child: false
+    notes: "默认做菜对象。"
+
+recipe_preferences: {}
+
+feedback_history: []
+
+memory_metadata:
+  source: example
+  confidence: 1.0
+  write_policy: explicit-confirmation

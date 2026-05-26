@@ -24,11 +24,15 @@ MIN_PRINCIPLE_COUNT = 10
 REQUIRED_STRUCTURE_PATHS = (
     "SKILL.md",
     "agents/openai.yaml",
+    "docs/howtocook-migration-manifest.md",
     "templates/recipe-full.md",
     "templates/recipe-kitchen.md",
     "templates/principle-card.md",
     "templates/failure-diagnosis.md",
     "templates/recipe-review-checklist.md",
+    "templates/meal-plan.md",
+    "templates/recipe-changelog.md",
+    "templates/imported-recipe-review.md",
     "references/defaults.md",
     "references/heat-levels.md",
     "references/unit-conversion.md",
@@ -36,6 +40,12 @@ REQUIRED_STRUCTURE_PATHS = (
     "references/scaling-rules.md",
     "references/food-safety-rules.md",
     "references/cooking-memory-layer.md",
+    "references/user-profile.example.yaml",
+    "references/feedback-log.example.yaml",
+    "references/memory-merge-rules.md",
+    "references/meal-planning-rules.md",
+    "references/recipe-versioning.md",
+    "references/recipe-import-rules.md",
     "references/source-notes.md",
     "scripts/render_recipe_pdf.py",
     "assets/print.css",
@@ -57,6 +67,11 @@ REQUIRED_RECIPE_SNIPPETS = (
     "### 食品安全",
 )
 
+APPLIED_PREFERENCE_SNIPPETS = (
+    "已使用偏好 / 假设",
+    "本次使用的偏好 / 假设",
+)
+
 REQUIRED_VALIDATION_FIELDS = (
     "- 操作者：",
     "- 环境：",
@@ -70,8 +85,9 @@ REQUIRED_VALIDATION_FIELDS = (
     "- 结论：",
 )
 
-PRINCIPLE_ID_PATTERN = re.compile(r"`(?:protein-denaturation|maillard|starch-gelatinization|velveting|salt-water-migration|seasoning-balance|blanching|oil-temperature-smoke-point|wok-heat|food-safety-temperature)`")
+PRINCIPLE_ID_PATTERN = re.compile(r"`[a-z][a-z0-9-]*`")
 STATUS_PATTERN = re.compile(r"状态：`([^`]+)`")
+HOWTOCOOK_SOURCE_MARKER = "Anduin2017/HowToCook"
 
 
 @dataclass(frozen=True)
@@ -115,6 +131,22 @@ def review_status(markdown_text: str) -> str | None:
     return match.group(1)
 
 
+def has_howtocook_source(markdown_text: str) -> bool:
+    return HOWTOCOOK_SOURCE_MARKER in markdown_text
+
+
+def validate_migration_manifest(markdown_text: str, howtocook_recipe_paths: list[Path]) -> list[str]:
+    errors: list[str] = []
+    if "source-needs-normalization" in markdown_text:
+        errors.append("migration manifest contains unresolved source status: source-needs-normalization")
+
+    for path in howtocook_recipe_paths:
+        target = path.as_posix()
+        if target not in markdown_text:
+            errors.append(f"migration manifest missing target: {target}")
+    return errors
+
+
 def validate_kitchen_validation_status(markdown_text: str, path: Path) -> list[str]:
     status = review_status(markdown_text)
     if status != "validated":
@@ -144,9 +176,14 @@ def validate_recipe(markdown_text: str, path: Path, source_notes: str) -> list[s
         if snippet not in markdown_text:
             errors.append(f"missing required snippet: {snippet}")
 
+    if not any(snippet in markdown_text for snippet in APPLIED_PREFERENCE_SNIPPETS):
+        errors.append("missing applied preferences or assumptions")
+
     status = review_status(markdown_text)
-    if status not in {"passed", "validated"}:
-        errors.append("missing review status `passed` or `validated`")
+    if status not in {"draft", "passed", "validated"}:
+        errors.append("missing review status `draft`, `passed`, or `validated`")
+    elif status == "draft" and has_howtocook_source(markdown_text):
+        errors.append("HowToCook source recipes must be `passed` or `validated`")
 
     if not PRINCIPLE_ID_PATTERN.search(markdown_text):
         errors.append("missing known principle card reference")
@@ -186,13 +223,22 @@ def check_repository(root: Path, required_benchmark_validations: int = 0) -> Che
         errors.append(f"recipe_count={len(recipes)} required={MIN_RECIPE_COUNT}")
 
     benchmark_validated = 0
+    howtocook_recipe_paths: list[Path] = []
     for path in recipes:
         markdown_text = path.read_text(encoding="utf-8")
-        recipe_errors = validate_recipe(markdown_text, path.relative_to(root), source_notes)
+        relative_path = path.relative_to(root)
+        recipe_errors = validate_recipe(markdown_text, relative_path, source_notes)
         for error in recipe_errors:
-            errors.append(f"{path.relative_to(root)}: {error}")
+            errors.append(f"{relative_path}: {error}")
+        if has_howtocook_source(markdown_text):
+            howtocook_recipe_paths.append(relative_path)
         if path.name in BENCHMARK_RECIPE_FILENAMES and review_status(markdown_text) == "validated":
             benchmark_validated += 1
+
+    migration_manifest_path = root / "docs" / "howtocook-migration-manifest.md"
+    if migration_manifest_path.exists():
+        migration_manifest = migration_manifest_path.read_text(encoding="utf-8")
+        errors.extend(validate_migration_manifest(migration_manifest, howtocook_recipe_paths))
 
     if required_benchmark_validations and benchmark_validated < required_benchmark_validations:
         errors.append(

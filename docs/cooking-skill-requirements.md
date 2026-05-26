@@ -296,6 +296,7 @@ V1 不优先支持：
 
 - 引用或改写外部菜谱时保留来源说明。
 - 对来源可信度和改写程度做标注。
+- HowToCook 官方来源迁移菜谱完成结构化改写后 Review 状态为 `passed`；用户导入或新建且尚未 review 的菜谱为 `draft`；用户实际执行并认可且有实测记录后才可升级为 `validated`。
 
 菜谱导入与改写：
 
@@ -718,15 +719,19 @@ cooking-skill/
     emulsification.md
     food-safety.md
   recipes/
-    chinese-home/
+    vegetable/
       tomato-egg.md
-      qingjiao-rousi.md
-      steamed-egg.md
       stir-fried-greens.md
+    meat/
+      qingjiao-rousi.md
       hongshaorou.md
-    western-quick/
+    soup/
+      steamed-egg.md
+    staple/
       tomato-pasta.md
+    steak/
       steak.md
+    cold-dish/
       salad-vinaigrette.md
   templates/
     recipe-full.md

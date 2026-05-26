@@ -34,4 +34,8 @@
 
 ## 本次使用的偏好 / 假设
 
-- {{applied_preferences_or_defaults}}
+- 人数：{{servings_or_profile_servings}}
+- 设备：{{applied_equipment}}
+- 口味：{{applied_taste}}
+- 家庭成员：{{applied_household_members_or_none}}
+- 历史反馈：{{applied_feedback_or_none}}

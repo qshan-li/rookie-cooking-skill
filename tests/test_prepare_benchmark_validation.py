@@ -25,11 +25,11 @@ class PrepareBenchmarkValidationTest(unittest.TestCase):
 
         self.assertEqual(
             [
-                Path("recipes/chinese-home/tomato-egg.md"),
-                Path("recipes/chinese-home/qingjiao-rousi.md"),
-                Path("recipes/chinese-home/steamed-egg.md"),
-                Path("recipes/chinese-home/stir-fried-greens.md"),
-                Path("recipes/chinese-home/hongshaorou.md"),
+                Path("recipes/vegetable/tomato-egg.md"),
+                Path("recipes/meat/qingjiao-rousi.md"),
+                Path("recipes/soup/steamed-egg.md"),
+                Path("recipes/vegetable/stir-fried-greens.md"),
+                Path("recipes/meat/hongshaorou.md"),
             ],
             recipes,
         )
@@ -39,7 +39,7 @@ class PrepareBenchmarkValidationTest(unittest.TestCase):
 
         path = module.validation_record_path(
             Path("output/validation"),
-            Path("recipes/chinese-home/tomato-egg.md"),
+            Path("recipes/vegetable/tomato-egg.md"),
         )
 
         self.assertEqual(Path("output/validation/tomato-egg-validation.json"), path)
