@@ -60,6 +60,7 @@ Read only the files needed for the user request:
 - Food safety: `references/food-safety-rules.md`.
 - User preferences and memory boundaries: `references/cooking-memory-layer.md`.
 - Recipe source and license notes: `references/source-notes.md`.
+- Printable output: `assets/print.css` and `scripts/render_recipe_pdf.py`.
 
 Use existing recipes under `recipes/` as examples only after checking that they passed the review checklist.
 
