@@ -71,6 +71,19 @@ class KitchenValidationRulesTest(unittest.TestCase):
 
 
 class RepositoryChecksTest(unittest.TestCase):
+    def test_repository_check_requires_skill_structure_paths(self):
+        checker = load_checker()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+
+            result = checker.check_repository(root)
+
+        self.assertFalse(result.ok)
+        self.assertIn("missing required path: SKILL.md", result.errors)
+        self.assertIn("missing required path: agents/openai.yaml", result.errors)
+        self.assertIn("missing required path: templates/recipe-full.md", result.errors)
+
     def test_repository_check_requires_ten_principle_cards(self):
         checker = load_checker()
 

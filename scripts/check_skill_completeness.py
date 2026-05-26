@@ -21,6 +21,26 @@ BENCHMARK_RECIPE_FILENAMES = {
 MIN_RECIPE_COUNT = 20
 MIN_PRINCIPLE_COUNT = 10
 
+REQUIRED_STRUCTURE_PATHS = (
+    "SKILL.md",
+    "agents/openai.yaml",
+    "templates/recipe-full.md",
+    "templates/recipe-kitchen.md",
+    "templates/principle-card.md",
+    "templates/failure-diagnosis.md",
+    "templates/recipe-review-checklist.md",
+    "references/defaults.md",
+    "references/heat-levels.md",
+    "references/unit-conversion.md",
+    "references/equipment-profiles.md",
+    "references/scaling-rules.md",
+    "references/food-safety-rules.md",
+    "references/cooking-memory-layer.md",
+    "references/source-notes.md",
+    "scripts/render_recipe_pdf.py",
+    "assets/print.css",
+)
+
 BANNED_UNQUALIFIED_TERMS = (
     "适量",
     "少许",
@@ -71,6 +91,14 @@ def recipe_paths(root: Path) -> list[Path]:
 def principle_paths(root: Path) -> list[Path]:
     principles_root = root / "principles"
     return sorted(principles_root.glob("*.md"))
+
+
+def validate_structure(root: Path) -> list[str]:
+    errors: list[str] = []
+    for path in REQUIRED_STRUCTURE_PATHS:
+        if not (root / path).exists():
+            errors.append(f"missing required path: {path}")
+    return errors
 
 
 def first_heading(markdown_text: str) -> str:
@@ -139,11 +167,14 @@ def validate_recipe(markdown_text: str, path: Path, source_notes: str) -> list[s
 
 def check_repository(root: Path, required_benchmark_validations: int = 0) -> CheckResult:
     errors: list[str] = []
+    errors.extend(validate_structure(root))
+
     source_notes_path = root / "references" / "source-notes.md"
     if not source_notes_path.exists():
-        return CheckResult(errors=["missing references/source-notes.md"])
+        source_notes = ""
+    else:
+        source_notes = source_notes_path.read_text(encoding="utf-8")
 
-    source_notes = source_notes_path.read_text(encoding="utf-8")
     principles = principle_paths(root)
     if len(principles) < MIN_PRINCIPLE_COUNT:
         errors.append(f"principle_count={len(principles)} required={MIN_PRINCIPLE_COUNT}")
