@@ -12,7 +12,11 @@
 
 | 菜名 | 上游 URL | 检查日期 | 许可证依据 | 改写程度 | 本 Skill 补充 | 可信度 |
 | --- | --- | --- | --- | --- | --- | --- |
-| {{dish_name}} | {{source_url}} | {{checked_date}} | {{license_basis}} | {{rewrite_level}} | {{skill_additions}} | {{confidence}} |
+| 番茄炒蛋 | https://github.com/Anduin2017/HowToCook/blob/master/dishes/vegetable_dish/西红柿炒鸡蛋.md | 2026-05-26 | Unlicense，仓库 `LICENSE` | 重写 | 状态判断、失败诊断、厨房版、食品安全、原理引用 | 高 |
+| 青椒肉丝 | HowToCook 未找到精确同名单菜；参考 https://github.com/Anduin2017/HowToCook/blob/master/dishes/meat_dish/香干肉丝.md、https://github.com/Anduin2017/HowToCook/blob/master/dishes/meat_dish/青椒土豆炒肉/青椒土豆炒肉.md、https://github.com/Anduin2017/HowToCook/blob/master/dishes/meat_dish/辣椒炒肉.md | 2026-05-26 | Unlicense，仓库 `LICENSE` | 原创重写，相关参考 | 上浆、滑炒、锅温、青椒出水诊断、食品安全 | 中 |
+| 蒸蛋羹 | https://github.com/Anduin2017/HowToCook/blob/master/dishes/vegetable_dish/鸡蛋羹/鸡蛋羹.md | 2026-05-26 | Unlicense，仓库 `LICENSE` | 重写 | 蛋水比例、过滤、蒸汽控制、蜂窝诊断、食品安全 | 高 |
+| 清炒小青菜 | https://github.com/Anduin2017/HowToCook/blob/master/dishes/vegetable_dish/炒青菜.md | 2026-05-26 | Unlicense，仓库 `LICENSE` | 重写 | 少水快炒、锅温、盐时机、出水诊断、厨房版 | 高 |
+| 红烧肉 | https://github.com/Anduin2017/HowToCook/blob/master/dishes/meat_dish/红烧肉/简易红烧肉.md | 2026-05-26 | Unlicense，仓库 `LICENSE` | 重写 | 焯水、煸炒、糖色、软烂判断、油脂处理、食品安全 | 高 |
 
 记录要求：
 
