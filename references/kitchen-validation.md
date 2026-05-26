@@ -34,6 +34,8 @@
 
 可用 `scripts/check_skill_completeness.py --require-benchmark-validations 3` 检查 Step 10 是否达到最低实测门槛。该命令在没有 3 道标杆菜 `validated` 记录时必须失败。
 
+可先用 `scripts/new_kitchen_validation_record.py <recipe.md> <record.json>` 生成空白 JSON，再在真实做菜时填写实际数据。空白字段不能作为实测证据。
+
 可用 `scripts/apply_kitchen_validation.py <recipe.md> <record.json> --mark-validated` 写入实测记录并更新状态。只有 `record.json` 的 `conclusion` 为 `validated-candidate` 时才允许 `--mark-validated`。
 
 JSON 字段名：
