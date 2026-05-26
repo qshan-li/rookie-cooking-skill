@@ -38,6 +38,8 @@
 
 可用 `scripts/apply_kitchen_validation.py <recipe.md> <record.json> --mark-validated` 写入实测记录并更新状态。只有 `record.json` 的 `conclusion` 为 `validated-candidate` 时才允许 `--mark-validated`。
 
+准备 5 道标杆菜实测材料时，运行 `scripts/prepare_benchmark_validation.py`。它会生成 5 份厨房执行版 PDF 和 5 份空白 JSON 记录，分别放入 `output/pdf/` 和 `output/validation/`。
+
 JSON 字段名：
 
 ```json

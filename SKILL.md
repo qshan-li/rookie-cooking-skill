@@ -65,6 +65,7 @@ Read only the files needed for the user request:
 - Repository quality gates: `scripts/check_skill_completeness.py`.
 - Apply real kitchen validation records: `scripts/apply_kitchen_validation.py`.
 - Create blank kitchen validation records: `scripts/new_kitchen_validation_record.py`.
+- Prepare benchmark validation packet: `scripts/prepare_benchmark_validation.py`.
 
 Use existing recipes under `recipes/` as examples only after checking that they passed the review checklist.
 
