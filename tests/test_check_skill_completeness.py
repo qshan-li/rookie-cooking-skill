@@ -71,6 +71,42 @@ class KitchenValidationRulesTest(unittest.TestCase):
 
 
 class RepositoryChecksTest(unittest.TestCase):
+    def test_repository_check_requires_at_least_twenty_recipes(self):
+        checker = load_checker()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            (root / "recipes" / "chinese-home").mkdir(parents=True)
+            (root / "references").mkdir()
+            (root / "references" / "source-notes.md").write_text("| 番茄炒蛋 |\n", encoding="utf-8")
+            (root / "recipes" / "chinese-home" / "tomato-egg.md").write_text(
+                """# 番茄炒蛋
+
+## 完整解释版
+
+| 步骤 | 操作 | 时间 | 火力 | 目标状态 | 失败信号 | 为什么 |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | test | 1 分钟 | 中火 | test | test | test |
+
+### 食品安全
+
+- test
+
+## 厨房执行版
+
+### Review
+
+- 状态：`passed`
+- `protein-denaturation`
+""",
+                encoding="utf-8",
+            )
+
+            result = checker.check_repository(root)
+
+        self.assertFalse(result.ok)
+        self.assertIn("recipe_count=1 required=20", result.errors)
+
     def test_repository_check_fails_when_required_benchmark_validations_are_missing(self):
         checker = load_checker()
 

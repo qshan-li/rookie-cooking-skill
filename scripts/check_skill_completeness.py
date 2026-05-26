@@ -18,6 +18,8 @@ BENCHMARK_RECIPE_FILENAMES = {
     "hongshaorou.md",
 }
 
+MIN_RECIPE_COUNT = 20
+
 BANNED_UNQUALIFIED_TERMS = (
     "适量",
     "少许",
@@ -139,6 +141,8 @@ def check_repository(root: Path, required_benchmark_validations: int = 0) -> Che
     recipes = recipe_paths(root)
     if not recipes:
         errors.append("no recipe files found under recipes/*/*.md")
+    elif len(recipes) < MIN_RECIPE_COUNT:
+        errors.append(f"recipe_count={len(recipes)} required={MIN_RECIPE_COUNT}")
 
     benchmark_validated = 0
     for path in recipes:
