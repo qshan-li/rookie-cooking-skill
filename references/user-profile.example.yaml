@@ -3,7 +3,7 @@ updated_at: "2026-05-26"
 
 defaults:
   servings: 2
-  preferred_output: full-plus-kitchen
+  preferred_output: full-explanation
 
 taste:
   salt_level: normal

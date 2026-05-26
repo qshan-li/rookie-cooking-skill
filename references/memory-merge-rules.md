@@ -7,7 +7,7 @@
 1. 食品安全和过敏、孕期、儿童、疾病相关约束。
 2. 用户本次明确输入。
 3. 指定家庭成员的忌口和强偏好。
-4. 菜谱级历史反馈。
+4. 菜谱级已确认偏好和历史反馈建议。
 5. 全局用户偏好。
 6. Skill 默认值。
 
@@ -22,8 +22,9 @@
 
 - 反馈先进入 `feedback_history` 或 `feedback-log`，状态为 `pending-confirmation`。
 - Skill 可以提出记忆建议，例如“青椒肉丝下次盐减少 20%”。
-- 未经确认的建议只能在当前对话或同一菜谱下作为低置信度提示，不能静默改长期 profile。
-- 用户明确确认“以后这道菜都少盐”后，才能写入 `recipe_preferences`。
+- 未经确认的建议只能在当前对话或同一菜谱下作为低置信度提示，输出时标注“建议”，不能静默改长期 profile。
+- 记忆建议写入 `memory-candidates.jsonl`，用户确认 candidate 或明确说“以后这道菜都少盐”后，才能写入 `recipe_preferences`。
+- 持久化读写通过 `scripts/cooking_memory.py` 完成，真实数据默认在 `~/.rookie-cooking/`。
 
 ## 输出要求
 
