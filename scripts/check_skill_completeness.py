@@ -11,11 +11,11 @@ import sys
 
 
 BENCHMARK_RECIPE_FILENAMES = {
-    "tomato-egg.md",
-    "qingjiao-rousi.md",
-    "steamed-egg.md",
-    "stir-fried-greens.md",
-    "hongshaorou.md",
+    "fan-qie-chao-dan.md",
+    "qing-jiao-rou-si.md",
+    "zheng-dan-geng.md",
+    "qing-chao-xiao-qing-cai.md",
+    "hong-shao-rou.md",
 }
 
 MIN_RECIPE_COUNT = 20
@@ -47,6 +47,9 @@ REQUIRED_STRUCTURE_PATHS = (
     "references/recipe-versioning.md",
     "references/recipe-import-rules.md",
     "references/source-notes.md",
+    "scripts/cooking_memory.py",
+    "scripts/run_agent_skill_qa.py",
+    "scripts/sync_skill_install.py",
     "scripts/render_recipe_pdf.py",
     "assets/print.css",
 )

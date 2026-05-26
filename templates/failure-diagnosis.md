@@ -1,5 +1,11 @@
 # {{dish_name}} 失败诊断
 
+## 已使用上下文
+
+- 观察到的事实：{{observed_facts}}
+- 本次假设：{{assumptions_or_none}}
+- 相关记忆：{{relevant_memory_or_none}}
+
 ## 通用诊断
 
 | 现象 | 优先排查 | 可能原因 | 立即补救 | 下次调整 |
@@ -19,3 +25,8 @@
 ## 安全判断
 
 - {{safety_related_symptom}}：{{discard_or_reheat_rule}}
+
+## 记忆处理
+
+- 本次反馈记录：{{feedback_record_plan}}
+- 长期记忆：{{memory_candidate_or_confirmation_needed}}

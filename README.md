@@ -36,12 +36,16 @@
 
 用户问“番茄炒蛋怎么做”“给我 4 人份红烧肉”“只要厨房版”。Skill 会生成一道菜的执行文档。
 
-输出强度：
+输出模式：
 
-- 默认：完整解释版 + 厨房执行版。
-- 快速：压缩解释，但保留克数、时间、状态判断、安全提示和失败信号。
-- 精准：增强克数、温度、缩放、设备适配和控制范围。
-- 厨房版-only：只给可扫读步骤，但不删除关键安全提示。
+- 默认：完整解释版；生成完成后询问是否需要 PDF 或直接打印。
+- 厨房执行版：可扫读步骤；生成完成后询问是否需要 PDF 或直接打印。
+
+两个模式后续都可以生成 PDF 或直接打印；PDF / 纸质内容使用厨房执行版。如果运行在 Codex、Claude Code、OpenClaw、Hermes Agent 等支持交互选择的 agent 终端中，且用户没有指定输出模式，Skill 会进入 QA 模式，让用户先选择默认或厨房执行版。若当前 agent 没有选项选择工具，则不阻塞生成，直接使用默认输出模式并简要说明假设。
+
+如果首次生成菜谱时还没有用户 profile，且 agent 支持交互选择，Skill 会在生成前提供一次轻量适配选择：继续使用默认值、仅适配本次、初始化长期偏好。默认选项是继续使用默认值；本次适配不会写入长期记忆。
+
+生成完成后的交付流程也必须使用交互选择工具：生成 PDF、直接打印、暂不需要。选择直接打印时，先列出打印设备并让用户选择；如果当前环境没有打印服务或设备，则提供生成 PDF 或输出厨房执行版文本两个降级选项。一次性生成的 PDF / 打印材料使用 `~/.rookie-cooking/tmp/print-jobs/` 里的临时厨房执行版，不要写入 `recipes/`；渲染成功后临时 Markdown 会被删除。
 
 ### Troubleshooting
 
@@ -65,12 +69,34 @@
 
 ## Memory Behavior
 
+真实用户记忆默认保存在仓库外的 `~/.rookie-cooking/`，也可以用 `ROOKIE_COOKING_HOME` 指向其他目录：
+
+```text
+~/.rookie-cooking/
+  profile.yaml
+  feedback.jsonl
+  memory-candidates.jsonl
+```
+
+Skill 通过 `scripts/cooking_memory.py` 读写这些文件，不把真实用户偏好提交进本仓库。常用命令：
+
+```bash
+python scripts/cooking_memory.py init-profile
+python scripts/cooking_memory.py read --dish tomato-egg --diners self
+python scripts/cooking_memory.py update-profile --set defaults.servings=4
+python scripts/cooking_memory.py add-feedback --recipe tomato-egg --issue too_salty
+python scripts/cooking_memory.py list-candidates
+python scripts/cooking_memory.py confirm-candidate <candidate_id>
+python scripts/cooking_memory.py view
+```
+
 每次执行时，Skill 会先检查是否有用户 profile 或 memory：
 
 - 有 profile：只读取与当前请求相关的设备、人数、口味、忌口、家庭成员和历史反馈。
 - 没有 profile：不阻塞主任务，直接按默认值输出，并在末尾轻提示可以初始化偏好。
 - 本次覆盖不等于长期偏好，例如“今天 4 人份”只影响当前请求。
 - 长期偏好必须由用户明确表达，例如“以后默认 4 人份”。
+- 单次反馈先进入 `feedback.jsonl` 或 `memory-candidates.jsonl`，在用户确认前只作为“建议”，不能静默变成默认。
 - 健康、过敏、宗教、孕期、儿童、疾病和长期忌口等敏感信息，写入长期记忆前必须明确确认。
 
 ## Installation
@@ -82,6 +108,7 @@ git clone <this-repository-url> rookie-cooking-skill
 cd rookie-cooking-skill
 python -m unittest discover -s tests
 python scripts/check_skill_completeness.py
+python scripts/sync_skill_install.py
 ```
 
 通用安装要求：
@@ -112,8 +139,21 @@ Use $rookie-cooking-skill 初始化我的做菜偏好。
 PDF 渲染是可选能力，需要本机有 Chrome 或 Chromium，并能导入 Python `markdown` 包：
 
 ```bash
-python scripts/render_recipe_pdf.py recipes/vegetable/tomato-egg.md
+python scripts/render_recipe_pdf.py recipes/vegetable/fan-qie-chao-dan.md
+python scripts/render_recipe_pdf.py --kitchen-markdown ~/.rookie-cooking/tmp/print-jobs/tang-cu-pai-gu.md --title 糖醋排骨
 ```
+
+默认 PDF 输出目录是 `~/.rookie-cooking/output/pdf/`，中间 HTML 文件写入 `~/.rookie-cooking/tmp/pdfs/`。
+
+直接打印会先生成厨房执行版 PDF，再调用系统 `lp` 或 `lpr`：
+
+```bash
+python scripts/render_recipe_pdf.py --list-printers
+python scripts/render_recipe_pdf.py recipes/vegetable/fan-qie-chao-dan.md --print
+python scripts/render_recipe_pdf.py recipes/vegetable/fan-qie-chao-dan.md --print --printer KitchenPrinter
+```
+
+当用户选择打印时，先用 `--list-printers` 或系统打印工具列出设备，让用户选择打印设备，再执行 `--print --printer <设备名>`。
 
 ## Repository Layout
 
@@ -125,7 +165,7 @@ python scripts/render_recipe_pdf.py recipes/vegetable/tomato-egg.md
 ├── recipes/                         # 已整理菜谱，按类别分组
 ├── principles/                      # 可复用烹饪原理卡
 ├── references/                      # 火力、换算、设备、缩放、安全、记忆层和来源规则
-├── scripts/                         # 校验、PDF 渲染和厨房实测记录工具
+├── scripts/                         # 校验、记忆、PDF 渲染和厨房实测记录工具
 ├── tests/                           # Python unittest 测试
 ├── assets/print.css                 # 厨房执行版打印样式
 └── docs/                            # 需求、计划和项目背景文档
@@ -156,6 +196,24 @@ python -m unittest discover -s tests
 python scripts/check_skill_completeness.py
 ```
 
+跨 agent 测试 Recipe Generation 的 QA 模式：
+
+```bash
+python scripts/run_agent_skill_qa.py plan
+python scripts/run_agent_skill_qa.py check-install
+python scripts/run_agent_skill_qa.py acp-check
+```
+
+真实调用 agent 时再运行：
+
+```bash
+python scripts/run_agent_skill_qa.py run-acp --agent gemini --case A
+python scripts/run_agent_skill_qa.py run-headless --agent codex --case A
+```
+
+`run-acp` 使用 `acpx <agent> exec` 的一次性会话，不依赖已有 `acpx` session，避免多次测试之间串上下文。
+它会为本地受信任 QA prompt 传入 `--approve-all`，确保 agent 能加载 skill；报告会记录 ACP 原始 `returncode`，但 `run-acp` 的退出状态按内容判定结果计算。
+
 要求一定数量的标杆菜完成厨房实测：
 
 ```bash
@@ -176,11 +234,11 @@ python scripts/check_skill_completeness.py --require-benchmark-validations 3
 
 ```bash
 python scripts/new_kitchen_validation_record.py \
-  recipes/vegetable/tomato-egg.md \
+  recipes/vegetable/fan-qie-chao-dan.md \
   output/validation/tomato-egg-validation.json
 
 python scripts/apply_kitchen_validation.py \
-  recipes/vegetable/tomato-egg.md \
+  recipes/vegetable/fan-qie-chao-dan.md \
   output/validation/tomato-egg-validation.json \
   --mark-validated
 ```

@@ -24,7 +24,7 @@ class KitchenValidationRulesTest(unittest.TestCase):
 
         violations = checker.validate_kitchen_validation_status(
             "# 番茄炒蛋\n\n### Review\n\n- 状态：`passed`\n",
-            Path("recipes/vegetable/tomato-egg.md"),
+            Path("recipes/vegetable/fan-qie-chao-dan.md"),
         )
 
         self.assertEqual([], violations)
@@ -34,7 +34,7 @@ class KitchenValidationRulesTest(unittest.TestCase):
 
         violations = checker.validate_kitchen_validation_status(
             "# 番茄炒蛋\n\n### Review\n\n- 状态：`validated`\n",
-            Path("recipes/vegetable/tomato-egg.md"),
+            Path("recipes/vegetable/fan-qie-chao-dan.md"),
         )
 
         self.assertIn("validated status requires ## 厨房实测记录", violations)
@@ -64,7 +64,7 @@ class KitchenValidationRulesTest(unittest.TestCase):
 - 修正建议：无需修改
 - 结论：`validated-candidate`
 """,
-            Path("recipes/vegetable/tomato-egg.md"),
+            Path("recipes/vegetable/fan-qie-chao-dan.md"),
         )
 
         self.assertEqual([], violations)
@@ -77,11 +77,11 @@ class RepositoryChecksTest(unittest.TestCase):
         violations = checker.validate_migration_manifest(
             "| 上游路径 | 目标文件 | 目标目录 | 迁移状态 |\n"
             "| --- | --- | --- | --- |\n",
-            [Path("recipes/vegetable/tomato-egg.md")],
+            [Path("recipes/vegetable/fan-qie-chao-dan.md")],
         )
 
         self.assertEqual(
-            ["migration manifest missing target: recipes/vegetable/tomato-egg.md"],
+            ["migration manifest missing target: recipes/vegetable/fan-qie-chao-dan.md"],
             violations,
         )
 
@@ -92,8 +92,8 @@ class RepositoryChecksTest(unittest.TestCase):
             "| 上游路径 | 目标文件 | 目标目录 | 迁移状态 |\n"
             "| --- | --- | --- | --- |\n"
             "| `dishes/vegetable_dish/西红柿炒鸡蛋.md` | "
-            "`recipes/vegetable/tomato-egg.md` | `recipes/vegetable/` | `passed` |\n",
-            [Path("recipes/vegetable/tomato-egg.md")],
+            "`recipes/vegetable/fan-qie-chao-dan.md` | `recipes/vegetable/` | `passed` |\n",
+            [Path("recipes/vegetable/fan-qie-chao-dan.md")],
         )
 
         self.assertEqual([], violations)
@@ -104,7 +104,7 @@ class RepositoryChecksTest(unittest.TestCase):
         violations = checker.validate_migration_manifest(
             "| 上游路径 | 目标文件 | 目标目录 | 迁移状态 |\n"
             "| --- | --- | --- | --- |\n"
-            "| 原创整理 | `recipes/cold-dish/vinaigrette-salad.md` | "
+            "| 原创整理 | `recipes/cold-dish/sha-la-you-cu-zhi.md` | "
             "`recipes/cold-dish/` | `source-needs-normalization` |\n",
             [],
         )
@@ -141,7 +141,7 @@ class RepositoryChecksTest(unittest.TestCase):
 
 - 基础参考：Anduin2017/HowToCook `dishes/vegetable_dish/西红柿炒鸡蛋.md`
 """,
-            Path("recipes/vegetable/tomato-egg.md"),
+            Path("recipes/vegetable/fan-qie-chao-dan.md"),
             "| 番茄炒蛋 |\n",
         )
 
@@ -237,6 +237,8 @@ class RepositoryChecksTest(unittest.TestCase):
         self.assertIn("missing required path: references/recipe-versioning.md", result.errors)
         self.assertIn("missing required path: templates/imported-recipe-review.md", result.errors)
         self.assertIn("missing required path: references/recipe-import-rules.md", result.errors)
+        self.assertIn("missing required path: scripts/cooking_memory.py", result.errors)
+        self.assertIn("missing required path: scripts/sync_skill_install.py", result.errors)
 
     def test_repository_check_requires_ten_principle_cards(self):
         checker = load_checker()
@@ -260,7 +262,7 @@ class RepositoryChecksTest(unittest.TestCase):
             (root / "recipes" / "vegetable").mkdir(parents=True)
             (root / "references").mkdir()
             (root / "references" / "source-notes.md").write_text("| 番茄炒蛋 |\n", encoding="utf-8")
-            (root / "recipes" / "vegetable" / "tomato-egg.md").write_text(
+            (root / "recipes" / "vegetable" / "fan-qie-chao-dan.md").write_text(
                 """# 番茄炒蛋
 
 ## 完整解释版
@@ -296,7 +298,7 @@ class RepositoryChecksTest(unittest.TestCase):
             (root / "recipes" / "vegetable").mkdir(parents=True)
             (root / "references").mkdir()
             (root / "references" / "source-notes.md").write_text("| 番茄炒蛋 |\n", encoding="utf-8")
-            (root / "recipes" / "vegetable" / "tomato-egg.md").write_text(
+            (root / "recipes" / "vegetable" / "fan-qie-chao-dan.md").write_text(
                 """# 番茄炒蛋
 
 ## 完整解释版

@@ -66,7 +66,3 @@
 ## 相关原理
 
 - `{{principle_id}}`：{{one_sentence_principle}}
-
-## 厨房执行版
-
-按 `templates/recipe-kitchen.md` 的格式生成，可单独打印。

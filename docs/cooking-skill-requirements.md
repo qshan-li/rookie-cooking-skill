@@ -720,13 +720,13 @@ cooking-skill/
     food-safety.md
   recipes/
     vegetable/
-      tomato-egg.md
-      stir-fried-greens.md
+      fan-qie-chao-dan.md
+      qing-chao-xiao-qing-cai.md
     meat/
-      qingjiao-rousi.md
-      hongshaorou.md
+      qing-jiao-rou-si.md
+      hong-shao-rou.md
     soup/
-      steamed-egg.md
+      zheng-dan-geng.md
     staple/
       tomato-pasta.md
     steak/

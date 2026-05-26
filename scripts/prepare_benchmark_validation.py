@@ -11,11 +11,11 @@ import sys
 
 
 BENCHMARK_RECIPE_PATHS = (
-    Path("recipes/vegetable/tomato-egg.md"),
-    Path("recipes/meat/qingjiao-rousi.md"),
-    Path("recipes/soup/steamed-egg.md"),
-    Path("recipes/vegetable/stir-fried-greens.md"),
-    Path("recipes/meat/hongshaorou.md"),
+    Path("recipes/vegetable/fan-qie-chao-dan.md"),
+    Path("recipes/meat/qing-jiao-rou-si.md"),
+    Path("recipes/soup/zheng-dan-geng.md"),
+    Path("recipes/vegetable/qing-chao-xiao-qing-cai.md"),
+    Path("recipes/meat/hong-shao-rou.md"),
 )
 
 DEFAULT_VALIDATION_DIR = Path("output/validation")

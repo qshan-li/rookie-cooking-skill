@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-This is a documentation-first cooking skill repository. Core skill instructions live in `SKILL.md`, with agent configuration in `agents/openai.yaml`. Requirements and planning documents are in `docs/`. Reusable recipe and review formats live in `templates/`. Recipe content is grouped by dish type under `recipes/`, for example `recipes/vegetable/tomato-egg.md`. Cooking principles belong in `principles/`, shared lookup material in `references/`, styling assets in `assets/`, validation utilities in `scripts/`, and automated checks in `tests/`.
+This is a documentation-first cooking skill repository. Core skill instructions live in `SKILL.md`, with agent configuration in `agents/openai.yaml`. Requirements and planning documents are in `docs/`. Reusable recipe and review formats live in `templates/`. Recipe content is grouped by dish type under `recipes/`, for example `recipes/vegetable/fan-qie-chao-dan.md`. Cooking principles belong in `principles/`, shared lookup material in `references/`, styling assets in `assets/`, validation utilities in `scripts/`, and automated checks in `tests/`.
 
 ## Build, Test, and Development Commands
 
@@ -16,7 +16,7 @@ Run commands from the repository root so relative paths resolve correctly.
 
 ## Coding Style & Naming Conventions
 
-Keep changes small and specific to the current task. Markdown should be concise, actionable, and implementation-oriented. Use kebab-case for content filenames, such as `steamed-seabass.md` or `protein-denaturation.md`. Keep recipe files aligned with `templates/recipe-full.md` and include explicit measurements, timing, heat level, target state, failure signals, and review status. Python scripts should use standard-library style, clear function names, `pathlib.Path` for paths, and explicit errors rather than silent fallbacks.
+Keep changes small and specific to the current task. Markdown should be concise, actionable, and implementation-oriented. Use kebab-case for content filenames, such as `qing-zheng-lu-yu.md` or `protein-denaturation.md`. Keep recipe files aligned with `templates/recipe-full.md` and include explicit measurements, timing, heat level, target state, failure signals, and review status. Python scripts should use standard-library style, clear function names, `pathlib.Path` for paths, and explicit errors rather than silent fallbacks.
 
 ## Testing Guidelines
 

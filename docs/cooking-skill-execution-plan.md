@@ -50,13 +50,13 @@ rookie-cooking-skill/
     food-safety-temperature.md
   recipes/
     vegetable/
-      tomato-egg.md
-      stir-fried-greens.md
+      fan-qie-chao-dan.md
+      qing-chao-xiao-qing-cai.md
     meat/
-      qingjiao-rousi.md
-      hongshaorou.md
+      qing-jiao-rou-si.md
+      hong-shao-rou.md
     soup/
-      steamed-egg.md
+      zheng-dan-geng.md
   references/
     defaults.md
     heat-levels.md
@@ -192,11 +192,11 @@ rookie-cooking-skill/
 执行：
 
 - 按完整解释版模板创建：
-  - `recipes/vegetable/tomato-egg.md`
-  - `recipes/meat/qingjiao-rousi.md`
-  - `recipes/soup/steamed-egg.md`
-  - `recipes/vegetable/stir-fried-greens.md`
-  - `recipes/meat/hongshaorou.md`
+  - `recipes/vegetable/fan-qie-chao-dan.md`
+  - `recipes/meat/qing-jiao-rou-si.md`
+  - `recipes/soup/zheng-dan-geng.md`
+  - `recipes/vegetable/qing-chao-xiao-qing-cai.md`
+  - `recipes/meat/hong-shao-rou.md`
 - 每道菜同时包含完整解释版和厨房执行版。
 - 每道菜引用相关原理卡。
 - 每道菜包含通用失败诊断和单菜专属失败诊断。
