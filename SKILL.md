@@ -62,6 +62,7 @@ Read only the files needed for the user request:
 - Recipe source and license notes: `references/source-notes.md`.
 - Real kitchen validation rules: `references/kitchen-validation.md`.
 - Printable output: `assets/print.css` and `scripts/render_recipe_pdf.py`.
+- Repository quality gates: `scripts/check_skill_completeness.py`.
 
 Use existing recipes under `recipes/` as examples only after checking that they passed the review checklist.
 

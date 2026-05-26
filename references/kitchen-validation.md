@@ -32,6 +32,8 @@
 - 实测发现的偏差必须落实到菜谱或 reference，不能只写在记录里。
 - 厨房执行版必须能在做饭时扫读，不依赖持续对话。
 
+可用 `scripts/check_skill_completeness.py --require-benchmark-validations 3` 检查 Step 10 是否达到最低实测门槛。该命令在没有 3 道标杆菜 `validated` 记录时必须失败。
+
 ## 不允许
 
 - 不允许根据文本自查标记 `validated`。
