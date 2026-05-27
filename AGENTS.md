@@ -8,6 +8,7 @@ This is a documentation-first cooking skill repository. Core skill instructions 
 
 No package manager or build system is required at the moment. Use Python directly:
 
+- `python scripts/runtime_harness.py doctor` records the local Python command and Python-dependent capabilities in `~/.rookie-cooking/runtime.json`.
 - `python -m unittest discover -s tests` runs the full test suite.
 - `python scripts/check_skill_completeness.py` validates required skill structure, principle counts, recipe counts, source notes, and kitchen validation status.
 - `python scripts/render_recipe_pdf.py <recipe.md>` renders a recipe using `assets/print.css` when PDF output is needed.

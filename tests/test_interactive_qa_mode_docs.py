@@ -128,24 +128,23 @@ class InteractiveQAModeDocsTest(unittest.TestCase):
         self.assertIn("不要默认输出完整购物清单", rules)
         self.assertIn("{{shopping_list_mode}}", template)
 
-    def test_readme_documents_multi_agent_qa_fallback(self):
+    def test_readme_is_user_facing_and_avoids_platform_overclaims(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
 
         self.assertIn("Codex", readme)
         self.assertIn("Claude Code", readme)
-        self.assertIn("OpenClaw", readme)
-        self.assertIn("Hermes Agent", readme)
-        self.assertIn("QA 模式", readme)
-        self.assertIn("Codex Default mode", readme)
-        self.assertIn("request_user_input", readme)
-        self.assertIn("不阻塞生成", readme)
+        self.assertIn("Gemini CLI", readme)
+        self.assertIn("Hermes", readme)
+        self.assertIn("## 快速开始", readme)
+        self.assertIn("## 使用方式", readme)
         self.assertIn("默认：完整解释版", readme)
         self.assertIn("厨房执行版：一页打印卡", readme)
         self.assertNotIn("快速：", readme)
         self.assertNotIn("精准：", readme)
         self.assertIn("PDF 或直接打印", readme)
-        self.assertIn("选择打印设备", readme)
-        self.assertIn("不要写入 `recipes/`", readme)
+        self.assertNotIn("全量 QA 通过", readme)
+        self.assertNotIn("50+ 个 agent", readme)
+        self.assertNotIn("OpenClaw", readme)
 
     def test_skill_defines_shared_elicitation_contract(self):
         skill = (ROOT / "SKILL.md").read_text(encoding="utf-8")
@@ -155,6 +154,21 @@ class InteractiveQAModeDocsTest(unittest.TestCase):
         self.assertIn("Optional", skill)
         self.assertIn("Post-answer expansion", skill)
         self.assertIn("Flow Matrix", skill)
+
+    def test_skill_documents_runtime_setup_elicitation(self):
+        skill = (ROOT / "SKILL.md").read_text(encoding="utf-8")
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+
+        self.assertIn("## Runtime Harness", skill)
+        self.assertIn("scripts/runtime_harness.py doctor", skill)
+        self.assertIn("Runtime Setup Elicitation", skill)
+        self.assertIn("Install Python now", skill)
+        self.assertIn("Continue without Python", skill)
+        self.assertIn("Show manual steps", skill)
+        self.assertIn("Do not enter Runtime Setup Elicitation for ordinary recipe generation", skill)
+        self.assertIn("runtime.json", readme)
+        self.assertIn("py -3", readme)
+        self.assertIn("winget install Python.Python.3.12", readme)
 
     def test_troubleshooting_defines_safety_triage_issue_taxonomy_and_memory_choice(self):
         skill = (ROOT / "SKILL.md").read_text(encoding="utf-8")

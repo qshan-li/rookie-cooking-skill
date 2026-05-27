@@ -89,11 +89,35 @@ Classify every possible question before asking it:
 
 Do not turn the skill into a questionnaire. Ask only when the answer changes safety handling, output shape, persistence, shopping-list detail, delivery, or durable memory.
 
+## Runtime Harness
+
+Python is required for the complete delivery chain: local memory, PDF rendering, direct printing, and repository validation. Recipe generation, troubleshooting, learning, meal planning, and recipe import can still continue without Python.
+
+When shell access is available, run `scripts/runtime_harness.py doctor` once near the start of a Python-dependent flow. The harness records the detected Python command and capabilities in `~/.rookie-cooking/runtime.json` unless `ROOKIE_COOKING_HOME` points elsewhere. Use the recorded Python command for later memory, PDF, and printing scripts instead of repeatedly guessing between `python3`, `python`, PowerShell, and `py -3`.
+
+If the harness cannot be run because Python is unavailable, do not retry across shells indefinitely. Treat memory, PDF, and direct printing as unavailable for this run, then follow Runtime Setup Elicitation only when the user requested a Python-dependent capability.
+
+## Runtime Setup Elicitation
+
+Enter Runtime Setup Elicitation only when all conditions are true:
+
+1. Python is unavailable or the harness reports Python-dependent capabilities unavailable.
+2. The user requested local memory write, PDF rendering, or direct printing.
+3. The runtime provides an interactive choice tool.
+
+Ask the user to choose one setup action:
+
+- **Install Python now**: the agent may install Python 3 and then run the project dependency install command after this explicit selection.
+- **Continue without Python**: skip local memory, PDF rendering, and direct printing; produce chat output or kitchen execution text only.
+- **Show manual steps**: show the platform-specific install commands from `scripts/runtime_harness.py install-hint` without executing them.
+
+Do not enter Runtime Setup Elicitation for ordinary recipe generation. In that case, continue with explicit user context or skill defaults, briefly state that local memory was skipped, and generate the recipe.
+
 ## Recipe Generation Memory Preflight
 
-Before asking any Recipe Generation question, run `scripts/cooking_memory.py read --dish <recipe-id> --diners <member-id...>` for each identifiable dish, using the default memory root `~/.rookie-cooking/` unless `ROOKIE_COOKING_HOME` is set.
+Before asking any Recipe Generation question, use the Runtime Harness result if available. When Python is available, run `scripts/cooking_memory.py read --dish <recipe-id> --diners <member-id...>` for each identifiable dish, using the default memory root `~/.rookie-cooking/` unless `ROOKIE_COOKING_HOME` is set.
 
-This preflight happens before Interactive QA Mode, First-Run Adaptation Elicitation, delivery selection, or any statement of serving count, equipment, or taste defaults. Do not state skill defaults such as 2 servings before this read completes. If memory is found, use its serving count, equipment, taste, household members, dislikes, and relevant recipe feedback as the baseline for later QA wording and final output. If memory is missing or invalid, continue with skill defaults and mention that defaults are being used.
+This preflight happens before Interactive QA Mode, First-Run Adaptation Elicitation, delivery selection, or any statement of serving count, equipment, or taste defaults. Do not state skill defaults such as 2 servings before this read completes when Python is available. If memory is found, use its serving count, equipment, taste, household members, dislikes, and relevant recipe feedback as the baseline for later QA wording and final output. If memory is missing, invalid, or Python is unavailable, continue with skill defaults and mention that defaults are being used.
 
 ## Flow Matrix
 
@@ -179,6 +203,8 @@ PDF and printed output must use the kitchen execution version, not the full expl
 Do not write one-off generated recipes to `recipes/`. That directory is only for maintained recipe content. For PDF or printing from a generated chat recipe, create a temporary kitchen execution artifact under `~/.rookie-cooking/tmp/print-jobs/`, derive a recipe-style pinyin slug matching maintained recipe filenames, then render it with `scripts/render_recipe_pdf.py --kitchen-markdown <path> --title <dish name> --output-stem <pinyin-slug>`. The renderer writes PDFs under `~/.rookie-cooking/output/pdf/` by default, deletes the temporary kitchen Markdown after a successful render, and does not duplicate an existing `-kitchen` suffix. PDF filenames should therefore be `<pinyin-slug>-kitchen.pdf`, matching the maintained recipe `.md` filename style.
 
 Before rendering a generated kitchen artifact, verify that it follows `templates/recipe-kitchen.md`: it must include `## 备料`, operation rows with `火力/时间`, `做什么`, `看到什么就下一步`, and `出错怎么办`, plus `## 安全 / 补救`. Run `python scripts/run_agent_skill_qa.py validate-kitchen-artifact <temporary-kitchen-markdown>` before PDF rendering. If validation fails, rewrite the temporary kitchen artifact into the table print-card structure before calling `scripts/render_recipe_pdf.py`.
+
+If Python is unavailable at PDF or direct-print time, do not claim delivery succeeded. Trigger Runtime Setup Elicitation when an interactive choice tool is available; otherwise provide the generated kitchen execution text and the manual install hint.
 
 ## Troubleshooting Workflow
 
@@ -378,6 +404,7 @@ Read only the files needed for the user request:
 | 文件 | 用途 |
 |---|---|
 | `scripts/cooking_memory.py` | 记忆读写 CLI |
+| `scripts/runtime_harness.py` | Python 环境检测、能力记录和安装提示 |
 | `scripts/render_recipe_pdf.py` | PDF 渲染 |
 | `scripts/check_skill_completeness.py` | 结构校验 |
 | `scripts/apply_kitchen_validation.py` | 应用厨房实测记录 |
