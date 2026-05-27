@@ -41,6 +41,7 @@ class PrinterInfo:
     source: str = ""  # "mdns", "powershell", "cache", "manual"
     is_default: bool = False
     status: str = "unknown"  # "idle", "processing", "stopped", "unknown"
+    document_formats: tuple[str, ...] = ()
 
 
 @dataclasses.dataclass
@@ -230,7 +231,7 @@ def _build_ipp_request(
     attrs += _ipp_attr(0x45, "printer-uri", printer_uri.encode("utf-8"))
     attrs += _ipp_attr(0x42, "requesting-user-name", requesting_user.encode("utf-8"))
     if document_data is not None:
-        attrs += _ipp_attr(0x42, "document-format", document_format.encode("utf-8"))
+        attrs += _ipp_attr(0x49, "document-format", document_format.encode("utf-8"))
 
     # End-of-attributes (tag 0x03)
     attrs += struct.pack(">B", 0x03)
@@ -254,6 +255,42 @@ def _parse_ipp_response(data: bytes) -> tuple[int, int, bytes]:
         )
     _version, status_code, request_id = struct.unpack(">HHI", data[:8])
     return status_code, request_id, data[8:]
+
+
+def _parse_ipp_attributes(data: bytes) -> dict[str, list[bytes]]:
+    attributes: dict[str, list[bytes]] = {}
+    index = 0
+    last_name = ""
+    while index < len(data):
+        tag = data[index]
+        index += 1
+        if tag == 0x03:
+            break
+        if tag in (0x01, 0x02, 0x04, 0x05):
+            last_name = ""
+            continue
+        if index + 2 > len(data):
+            break
+
+        name_length = int.from_bytes(data[index:index + 2], "big")
+        index += 2
+        name = data[index:index + name_length].decode("utf-8", errors="replace")
+        index += name_length
+        if index + 2 > len(data):
+            break
+
+        value_length = int.from_bytes(data[index:index + 2], "big")
+        index += 2
+        value = data[index:index + value_length]
+        index += value_length
+
+        if name:
+            last_name = name
+        elif last_name:
+            name = last_name
+        if name:
+            attributes.setdefault(name, []).append(value)
+    return attributes
 
 
 # ---------------------------------------------------------------------------
@@ -352,13 +389,19 @@ def ipp_get_printer_attributes(
         printer_uri=printer_uri,
     )
     response = _ipp_request(printer_ip, port, request, timeout)
-    status_code, _req_id, _rest = _parse_ipp_response(response)
+    status_code, _req_id, rest = _parse_ipp_response(response)
     _check_ipp_status(status_code, printer_ip)
+    attributes = _parse_ipp_attributes(rest)
+    document_formats = tuple(
+        value.decode("utf-8", errors="replace")
+        for value in attributes.get("document-format-supported", [])
+    )
     return PrinterInfo(
         name=printer_ip,
         ip=printer_ip,
         port=port,
         status="idle",
+        document_formats=document_formats,
     )
 
 
@@ -374,7 +417,14 @@ def ipp_print_job(
     Probes printer status first, then sends the document.
     """
     # Pre-print probe
-    ipp_get_printer_attributes(printer_ip, port, timeout=min(timeout, 5.0))
+    info = ipp_get_printer_attributes(printer_ip, port, timeout=min(timeout, 5.0))
+    if info.document_formats and "application/pdf" not in info.document_formats:
+        supported = ", ".join(info.document_formats)
+        raise PrinterError(
+            category="unsupported_format",
+            message="打印机不支持直接打印 PDF。请用系统打印对话框或 Windows 打印机驱动打印生成的 PDF。",
+            detail=f"printer={printer_ip}, document-format-supported={supported}",
+        )
 
     # Read PDF
     pdf_data = pdf_path.read_bytes()

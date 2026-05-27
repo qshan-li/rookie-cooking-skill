@@ -290,6 +290,20 @@ class TestPrint(TestCase):
     def _make_success_response(self) -> bytes:
         return struct.pack(">HHI", 0x0101, 0x0000, 1)
 
+    def _make_printer_attributes_response(self, document_formats: list[str]) -> bytes:
+        attrs = b"\x04"
+        for index, document_format in enumerate(document_formats):
+            name = b"document-format-supported" if index == 0 else b""
+            value = document_format.encode("utf-8")
+            attrs += (
+                b"\x49"
+                + struct.pack(">H", len(name))
+                + name
+                + struct.pack(">H", len(value))
+                + value
+            )
+        return struct.pack(">HHI", 0x0101, 0x0000, 1) + attrs + b"\x03"
+
     def test_print_file_success_flow(self):
         module = load_module()
         with TemporaryDirectory() as tmp:
@@ -343,6 +357,26 @@ class TestPrint(TestCase):
                     module.print_file(pdf_path, "192.168.1.50")
         # Two calls: Get-Printer-Attributes (probe) + Print-Job
         self.assertEqual(call_count, 2)
+
+    def test_print_file_rejects_printer_without_pdf_support(self):
+        module = load_module()
+
+        with TemporaryDirectory() as tmp:
+            pdf_path = Path(tmp) / "test.pdf"
+            pdf_path.write_bytes(b"%PDF-1.4 fake")
+            response = self._make_printer_attributes_response([
+                "text/plain",
+                "application/vnd.hp-pcl",
+                "application/octet-stream",
+            ])
+            with patch.object(module, "config_root", return_value=Path(tmp)):
+                with patch.object(module, "_ipp_request", return_value=response) as request:
+                    with self.assertRaises(module.PrinterError) as ctx:
+                        module.print_file(pdf_path, "192.168.1.50")
+
+        self.assertEqual(ctx.exception.category, "unsupported_format")
+        self.assertIn("不支持直接打印 PDF", ctx.exception.message)
+        self.assertEqual(request.call_count, 1)
 
     def test_print_file_uses_default_printer_when_none_specified(self):
         module = load_module()

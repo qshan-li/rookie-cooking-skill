@@ -269,11 +269,18 @@ def print_pdf(pdf_path: Path, printer: str | None = None) -> None:
     """Print PDF. Try IPP first, fall back to CUPS lp/lpr."""
     try:
         printer_mod = _load_printer_module()
-        result = printer_mod.print_file(pdf_path, printer)
-        if result.success:
-            return
     except Exception:
         pass  # fall through to CUPS
+    else:
+        try:
+            result = printer_mod.print_file(pdf_path, printer)
+        except printer_mod.PrinterError:
+            raise
+        except Exception:
+            pass  # fall through to CUPS
+        else:
+            if result.success:
+                return
 
     # CUPS fallback
     lp_path = shutil.which("lp")
@@ -347,7 +354,11 @@ def main() -> None:
 
     render_pdf(find_chrome(), html_path, pdf_path)
     if args.print:
-        print_pdf(pdf_path, args.printer)
+        try:
+            print_pdf(pdf_path, args.printer)
+        except Exception as exc:
+            print(f"打印失败: {exc}", file=sys.stderr)
+            sys.exit(1)
     if kitchen_markdown_path is not None:
         kitchen_markdown_path.unlink()
     print(pdf_path)

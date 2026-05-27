@@ -1,4 +1,5 @@
 import importlib.util
+import io
 from pathlib import Path
 import sys
 from tempfile import TemporaryDirectory
@@ -125,6 +126,64 @@ class RenderRecipePdfTest(unittest.TestCase):
                 output_dir.resolve() / "fan-qie-chao-dan-kitchen.pdf",
                 "KitchenPrinter",
             )
+
+    def test_main_print_failure_exits_with_message(self):
+        module = load_module()
+
+        with TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            recipe_path = tmp_path / "fan-qie-chao-dan.md"
+            css_path = tmp_path / "print.css"
+            output_dir = tmp_path / "output"
+            html_dir = tmp_path / "html"
+            recipe_path.write_text(
+                "# 番茄炒蛋\n\n## 完整解释版\n\n正文\n\n## 厨房执行版\n\n- 开火。\n",
+                encoding="utf-8",
+            )
+            css_path.write_text("", encoding="utf-8")
+            argv = [
+                "render_recipe_pdf.py",
+                str(recipe_path),
+                "--output-dir",
+                str(output_dir),
+                "--tmp-dir",
+                str(html_dir),
+                "--css",
+                str(css_path),
+                "--print",
+                "--printer",
+                "KitchenPrinter",
+            ]
+
+            with (
+                patch.object(sys, "argv", argv),
+                patch.object(module, "find_chrome", return_value="chrome"),
+                patch.object(module, "render_pdf"),
+                patch.object(module, "print_pdf", side_effect=RuntimeError("unsupported pdf")),
+                patch("sys.stderr", new_callable=io.StringIO) as stderr,
+                self.assertRaises(SystemExit) as ctx,
+            ):
+                module.main()
+
+        self.assertEqual(ctx.exception.code, 1)
+        self.assertIn("打印失败: unsupported pdf", stderr.getvalue())
+
+    def test_print_pdf_preserves_printer_module_error(self):
+        module = load_module()
+
+        class FakePrinterError(Exception):
+            pass
+
+        fake_printer = MagicMock()
+        fake_printer.PrinterError = FakePrinterError
+        fake_printer.print_file.side_effect = FakePrinterError("unsupported pdf")
+
+        with (
+            patch.object(module, "_load_printer_module", return_value=fake_printer),
+            patch.object(module.shutil, "which", return_value=None),
+            self.assertRaises(FakePrinterError),
+        ):
+            module.print_pdf(Path("/tmp/test.pdf"), "192.168.1.50")
 
     def test_list_printers_uses_lpstat_when_available(self):
         module = load_module()

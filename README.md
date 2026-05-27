@@ -4,6 +4,17 @@
 
 适合让 AI Agent 生成菜谱、诊断做菜失败、解释烹饪原理、规划一餐，或把外部菜谱改写成更适合新手执行的格式。
 
+## 功能特点
+
+| 特性 | 说明 |
+| --- | --- |
+| 执行导向 | 拒绝模糊，每一步操作标准化为「操作、时间、火力、状态、原因」 |
+| 故障闭环 | 把“太咸”“出水”“肉柴”“蛋羹蜂窝”映射到原因假设和下次修正 |
+| 知识解耦 | 原理卡（Principles）与具体菜肴操作解耦，学会举一反三 |
+| 安全优先 | 食品安全边界（中心温度、解冻、生熟分开）优先于口感建议 |
+| 记忆适配 | 按用户设备、人数、口味、忌口和历史反馈调整输出 |
+| 可打印输出 | 厨房执行版一页打印卡，支持 PDF 渲染和直接打印 |
+
 ## 快速开始
 
 推荐用 skill 安装器：
@@ -72,22 +83,11 @@ Use $rookie-cooking 为什么炒青菜会出水？
 
 ### 运行环境检查
 
-菜谱生成本身不依赖 Python；本地记忆、PDF、直接打印和开发校验需要 Python。开始使用 PDF / 打印前，先运行：
+菜谱生成本身不依赖 Python。只有在使用本地记忆、PDF、直接打印或开发校验时，才需要可用的 Python 环境。
 
-```bash
-python scripts/runtime_harness.py doctor
-```
+如果当前 Agent 有 shell 权限，它可以自行检查运行环境，并把结果记录到 `~/.rookie-cooking/runtime.json`，后续复用已确认的 Python 命令。普通菜谱生成不需要用户手动做环境检查。
 
-该命令会把检测结果写入 `~/.rookie-cooking/runtime.json`，后续 Agent 应复用其中记录的 Python 命令，避免反复在 `python3`、`python`、PowerShell 和 `py -3` 之间猜测。
-
-Windows 上如果没有可用 Python，推荐在 PowerShell 中安装：
-
-```powershell
-winget install Python.Python.3.12
-py -3 -m pip install -r requirements.txt
-```
-
-如果当前只是生成菜谱，Python 不可用时可以继续使用默认值；如果要生成 PDF 或直接打印，则必须先完成 Python 和依赖安装。
+如果只是生成菜谱，Python 不可用也可以继续使用默认输出。PDF 或直接打印依赖 Python、相关依赖以及本机 Chrome / Chromium，使用这些功能前由 Agent 检查并提示缺失项即可。
 
 ### 本地记忆
 
@@ -100,34 +100,13 @@ py -3 -m pip install -r requirements.txt
   memory-candidates.jsonl
 ```
 
-常用命令：
-
-```bash
-python scripts/runtime_harness.py doctor
-python scripts/cooking_memory.py init-profile
-python scripts/cooking_memory.py view
-python scripts/cooking_memory.py update-profile --set defaults.servings=4
-python scripts/cooking_memory.py list-candidates
-```
-
 长期偏好、过敏、宗教饮食、疾病相关限制等信息写入前需要用户确认。
 
 ### PDF 和打印
 
-安装 Python 依赖：
+PDF 和打印用于把厨房执行版输出成文件或发送到打印机。需要本机 Python 依赖、Chrome / Chromium，以及可用打印机配置。
 
-```bash
-python scripts/runtime_harness.py doctor
-pip install -r requirements.txt
-```
-
-渲染 PDF 需要本机有 Chrome 或 Chromium。
-
-```bash
-python scripts/render_recipe_pdf.py recipes/vegetable/fan-qie-chao-dan.md
-python scripts/render_recipe_pdf.py --list-printers
-python scripts/render_recipe_pdf.py recipes/vegetable/fan-qie-chao-dan.md --print --printer <设备名>
-```
+这些步骤通常由有 shell 权限的 Agent 执行；用户只需要说明要 PDF 还是直接打印，并提供目标菜谱和打印机偏好。
 
 ## 仓库内容
 
