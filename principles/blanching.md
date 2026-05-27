@@ -4,7 +4,7 @@
 - 名称：焯水
 - 一句话解释：焯水用短时间热水处理食材，可以去血沫、定色、预熟或降低异味，但会带走部分味道和水溶性成分。
 - 适用菜谱：`hongshaorou`、`stir-fried-greens`
-- 来源：中式家常烹饪技法。
+- 来源：The Culinary Institute of America, The Professional Chef；中式家常烹饪技法。
 
 ## 原理描述
 

@@ -4,7 +4,7 @@
 - 名称：盐和水分迁移
 - 一句话解释：盐会改变食材内外水分移动，放得太早可能出水，放得合适能入味和保水。
 - 适用菜谱：`stir-fried-greens`、`qingjiao-rousi`、`tomato-egg`
-- 来源：基础烹饪科学。
+- 来源：Harold McGee, On Food and Cooking；食品化学教材；基础烹饪科学。
 
 ## 原理描述
 

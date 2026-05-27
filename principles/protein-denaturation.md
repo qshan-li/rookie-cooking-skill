@@ -4,7 +4,7 @@
 - 名称：蛋白质变性
 - 一句话解释：蛋白质受热、受盐或受酸后会改变结构，刚好凝固是嫩，过度收缩就是老和柴。
 - 适用菜谱：`qingjiao-rousi`、`steamed-egg`、`hongshaorou`
-- 来源：基础烹饪科学；食品安全温度另见 `food-safety-temperature`。
+- 来源：Harold McGee, On Food and Cooking；Modernist Cuisine；食品化学教材；食品安全温度另见 `food-safety-temperature`。
 
 ## 原理描述
 

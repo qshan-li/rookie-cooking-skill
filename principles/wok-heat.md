@@ -4,7 +4,7 @@
 - 名称：锅温和锅气
 - 一句话解释：锅温足、食材不拥挤、水分快速蒸发，才会有清爽香味；锅温掉下去就容易出水变闷。
 - 适用菜谱：`stir-fried-greens`、`qingjiao-rousi`
-- 来源：中式快炒经验和传热常识。
+- 来源：Modernist Cuisine；The Culinary Institute of America, The Professional Chef；中式快炒经验和传热常识。
 
 ## 原理描述
 

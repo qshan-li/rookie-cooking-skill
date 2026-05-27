@@ -4,7 +4,7 @@
 - 名称：调味平衡
 - 一句话解释：咸、甜、酸、鲜和油脂要互相支撑，味道寡淡不一定只是盐少。
 - 适用菜谱：`tomato-egg`、`hongshaorou`、`stir-fried-greens`
-- 来源：家常调味经验和基础味觉原理。
+- 来源：Harold McGee, On Food and Cooking；America's Test Kitchen, The Science of Good Cooking；家常调味经验和基础味觉原理。
 
 ## 原理描述
 

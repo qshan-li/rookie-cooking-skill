@@ -4,7 +4,7 @@
 - 名称：淀粉糊化
 - 一句话解释：淀粉遇水受热会吸水变稠，用得好能锁水挂汁，用过头会结块或糊底。
 - 适用菜谱：`qingjiao-rousi`、`tomato-egg`
-- 来源：基础烹饪科学。
+- 来源：Harold McGee, On Food and Cooking；食品化学教材；基础烹饪科学。
 
 ## 原理描述
 
