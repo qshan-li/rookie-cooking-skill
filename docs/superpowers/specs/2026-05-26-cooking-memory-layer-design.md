@@ -5,7 +5,7 @@ Status: Approved for planning
 
 ## Context
 
-`rookie-cooking-skill` already defines memory boundaries in `SKILL.md`,
+`rookie-cooking` already defines memory boundaries in `SKILL.md`,
 `references/cooking-memory-layer.md`, `references/user-profile.example.yaml`,
 `references/feedback-log.example.yaml`, and
 `references/memory-merge-rules.md`. The missing piece is an actual

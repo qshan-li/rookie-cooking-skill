@@ -352,7 +352,7 @@ Add:
     "I": TestCase(
         "I",
         "Memory Init / Update",
-        "Use $rookie-cooking-skill 以后默认 4 人份。",
+        "Use $rookie-cooking 以后默认 4 人份。",
         "Memory update should show a write preview and require confirmation.",
     ),
 ```

@@ -5,7 +5,7 @@ Status: Ready for execution planning
 
 ## Context
 
-`rookie-cooking-skill` already has a strong recipe schema, a local memory CLI,
+`rookie-cooking` already has a strong recipe schema, a local memory CLI,
 and prompt-level workflow rules for recipe generation, troubleshooting, meal
 planning, recipe import, learning, and durable preference updates. The current
 gap is product flow consistency.
