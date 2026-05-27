@@ -13,16 +13,27 @@
 - **记忆适配** — 按用户设备、人数、口味、忌口和历史反馈调整输出
 - **可打印输出** — 厨房执行版一页打印卡，支持 PDF 渲染和直接打印
 
-## Quick Start
+## 30 秒开始
+
+**一行命令安装（推荐）：**
 
 ```bash
-git clone https://github.com/qshan-li/rookie-cooking-skill.git rookie-cooking
-cd rookie-cooking
-python -m unittest discover -s tests
-python scripts/check_skill_completeness.py
+npx skills add qshan-li/rookie-cooking-skill
 ```
 
-调用示例：
+**也可以直接把这段话发给有 shell 权限的 AI Agent：**
+
+```
+帮我安装 rookie-cooking skill。请把 https://github.com/qshan-li/rookie-cooking-skill 克隆到 ~/.local/share/skills/rookie-cooking，然后为已安装的 agent 创建符号链接：Claude Code 链接到 ~/.claude/skills/rookie-cooking，Codex 链接到 ~/.codex/skills/rookie-cooking，Gemini 链接到 ~/.gemini/skills/rookie-cooking，Hermes 链接到 ~/.hermes/skills/rookie-cooking。安装完成后检查 SKILL.md、templates/、references/、principles/ 是否存在。
+```
+
+**已经安装过的话，用这段话更新：**
+
+```
+帮我更新 rookie-cooking skill。请进入 ~/.local/share/skills/rookie-cooking 执行 git pull，然后告诉我当前最新 commit。
+```
+
+**安装后直接对 Agent 说：**
 
 ```
 Use $rookie-cooking 生成 2 人份番茄炒蛋，厨房只有电磁炉和不粘锅。
@@ -90,15 +101,98 @@ python scripts/cooking_memory.py confirm-candidate <candidate_id>
 
 ## Installation
 
-把本仓库作为本地 Skill 目录提供给你的 agent。Skill 入口是 [`SKILL.md`](SKILL.md)，展示配置在 [`agents/openai.yaml`](agents/openai.yaml)。
+### 依赖
 
-通用安装要求：
+- Python 3.10+
+- `pip install pyyaml markdown`（烹饪记忆和 PDF 渲染必需）
+- `pip install zeroconf`（可选，用于自动发现网络打印机）
+- Chrome/Chromium（可选，PDF 渲染需要）
 
-1. 让 agent 能发现本目录
-2. 让 agent 在触发 `$rookie-cooking` 时读取 [`SKILL.md`](SKILL.md)
-3. 如果 agent 支持展示元数据，可读取 [`agents/openai.yaml`](agents/openai.yaml)
+### 方式一：一行命令安装（推荐）
 
-PDF 渲染（可选）：
+```bash
+npx skills add qshan-li/rookie-cooking-skill
+```
+
+自动检测你安装的 agent，创建对应的符号链接。支持 Claude Code、Codex、Gemini CLI、Hermes 等 50+ 个 agent。
+
+### 方式二：把下面这段话直接发给 AI
+
+```
+帮我安装 rookie-cooking skill。请把 https://github.com/qshan-li/rookie-cooking-skill 克隆到 ~/.local/share/skills/rookie-cooking，然后为已安装的 agent 创建符号链接：Claude Code 链接到 ~/.claude/skills/rookie-cooking，Codex 链接到 ~/.codex/skills/rookie-cooking，Gemini 链接到 ~/.gemini/skills/rookie-cooking，Hermes 链接到 ~/.hermes/skills/rookie-cooking。安装完成后检查 SKILL.md、templates/、references/、principles/ 是否存在。
+```
+
+更新：
+
+```
+帮我更新 rookie-cooking skill。请进入 ~/.local/share/skills/rookie-cooking 执行 git pull，然后告诉我当前最新 commit。
+```
+
+### 方式三：手动安装
+
+克隆仓库：
+
+```bash
+git clone https://github.com/qshan-li/rookie-cooking-skill.git ~/.local/share/skills/rookie-cooking
+```
+
+安装 Python 依赖：
+
+```bash
+pip install pyyaml markdown
+```
+
+按你使用的 agent 创建符号链接：
+
+**Claude Code**
+
+```bash
+ln -s ~/.local/share/skills/rookie-cooking ~/.claude/skills/rookie-cooking
+```
+
+**Codex**
+
+```bash
+ln -s ~/.local/share/skills/rookie-cooking ~/.codex/skills/rookie-cooking
+```
+
+**Gemini CLI**
+
+```bash
+ln -s ~/.local/share/skills/rookie-cooking ~/.gemini/skills/rookie-cooking
+```
+
+**Hermes Agent**
+
+```bash
+ln -s ~/.local/share/skills/rookie-cooking ~/.hermes/skills/rookie-cooking
+```
+
+### 验证安装
+
+检查符号链接和关键文件是否存在：
+
+```bash
+# Claude Code
+ls ~/.claude/skills/rookie-cooking/SKILL.md
+
+# Codex
+ls ~/.codex/skills/rookie-cooking/SKILL.md
+
+# Gemini CLI
+ls ~/.gemini/skills/rookie-cooking/SKILL.md
+
+# Hermes Agent
+ls ~/.hermes/skills/rookie-cooking/SKILL.md
+```
+
+或使用内置检查：
+
+```bash
+python scripts/run_agent_skill_qa.py install-check
+```
+
+### PDF 渲染（可选）
 
 ```bash
 python scripts/render_recipe_pdf.py recipes/vegetable/fan-qie-chao-dan.md
@@ -107,8 +201,6 @@ python scripts/render_recipe_pdf.py recipes/vegetable/fan-qie-chao-dan.md --prin
 ```
 
 选择打印设备时，先用 `--list-printers` 列出设备，让用户选择打印设备，再执行 `--print --printer <设备名>`。一次性生成的 PDF / 打印材料使用 `~/.rookie-cooking/tmp/print-jobs/` 里的临时厨房执行版，不要写入 `recipes/`。
-
-需要本机有 Chrome/Chromium，并能导入 Python `markdown` 包。
 
 ## Directory Structure
 
