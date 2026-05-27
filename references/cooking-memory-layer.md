@@ -37,7 +37,6 @@ Skill 不应在 prompt 中直接散写 YAML 或 JSONL 文件。
 ```yaml
 defaults:
   servings: 2
-  preferred_output: full-explanation
 taste:
   salt_level: normal
   sweetness: normal
@@ -64,6 +63,8 @@ feedback_history: []
 | Recipe-Specific Memory | 单菜反馈 | 青椒肉丝上次肉柴 | 下次生成该菜时优先读取。 |
 | Learning Log | 学习记录 | 已解释过美拉德反应 | 只用于减少重复解释。 |
 
+输出模式不是长期记忆字段。不要保存“默认完整版”“默认厨房执行版”“默认生成 PDF”“默认打印”等输出形态或交付方式；Recipe Generation 每次缺少输出模式时，只要运行时支持交互选择工具，都必须重新提供默认 / 厨房执行版选择。长期记忆只能影响人数、设备、口味、忌口、家庭成员和已确认的单菜参数调整。
+
 ## 初始化规则
 
 缺少用户 profile 时，不应阻塞当前做菜、诊断、原理解释、一餐规划或菜谱导入任务。
@@ -76,6 +77,27 @@ feedback_history: []
 - 只有用户明确要求初始化或更新偏好时，才进入 Memory Init / Update 流程。
 - 初始化流程应优先记录会改变菜谱参数的信息：默认人数、灶具、锅具、是否有秤、是否有温度计、咸淡油辣偏好、忌口和家庭成员。
 - 健康、过敏、宗教、孕期、儿童、疾病和长期忌口等敏感信息，必须在写入长期记忆前得到明确确认。
+
+## 写入预览
+
+Memory Init / Update 必须在任何长期写入前展示写入预览，而不是直接调用写命令。
+
+```text
+Will write:
+- defaults.servings = 4
+- equipment.stove_type = induction
+
+Will not write:
+- tonight_no_cilantro, session-only
+```
+
+用户必须选择：
+
+- Confirm write
+- Edit values
+- Cancel
+
+当前 CLI 可以执行写入，但不一定提供专门的 dry-run 模式。第一版可以由 skill 根据解析出的用户意图生成预览；如果跨 agent 测试显示预览不稳定，再给 `scripts/cooking_memory.py` 增加 dry-run 或 preview 命令。
 
 ## 家庭成员
 
@@ -101,6 +123,7 @@ feedback_history: []
 - 自动学习产生的长期记忆建议写入 `memory-candidates.jsonl`，状态为 `pending`。
 - 用户明确确认“以后都这样调整”或确认某个 candidate 后，才写入长期 `recipe_preferences`。
 - 健康、过敏、孕期、儿童、长期忌口等敏感信息必须确认后写入。
+- Troubleshooting 结束后只能提供三类记忆动作：Record feedback only、Save durable preference、Do not record。没有确认时只能写 pending feedback 或 candidate。
 
 合并细则见 `references/memory-merge-rules.md`。
 

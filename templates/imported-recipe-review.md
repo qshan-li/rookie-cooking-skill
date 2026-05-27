@@ -4,6 +4,9 @@
 原始来源：{{source_description_or_url}}  
 导入状态：`draft`  
 目标文件：{{target_recipe_path}}
+导入意图：{{import_intent}}
+持久化目标：{{persistence_target}}
+输出形态：{{output_shape}}
 
 ## 原始菜谱要点
 
@@ -16,7 +19,7 @@
 ## 改写要求
 
 - [ ] 转成 `templates/recipe-full.md` 和 `templates/recipe-kitchen.md` 结构。
-- [ ] 补齐 g、ml、时间、火力、目标状态和失败信号。
+- [ ] 补齐 g、ml、时间、火力、目标状态和出错补救。
 - [ ] 补齐食品安全提示。
 - [ ] 补齐至少 1 个原理引用。
 - [ ] 补齐失败诊断和替代方案。

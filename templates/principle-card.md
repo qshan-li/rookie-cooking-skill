@@ -5,6 +5,16 @@
 - 适用场景：{{use_cases}}
 - 相关菜谱：{{linked_recipes}}
 
+## 短答版
+
+默认先短答，不先询问解释深度。
+
+- 一句话解释：{{one_sentence}}
+- 关键变量：{{key_variables_short}}
+- 新手判断：{{beginner_check_short}}
+- 可练习菜：{{practice_recipe}}
+- 展开选项：Full principle card / Explain through one dish / Diagnose my failed result
+
 ## 原理
 
 {{principle_explanation}}

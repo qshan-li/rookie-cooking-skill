@@ -22,6 +22,6 @@
 2. 已使用的默认假设和可重新适配的信息。
 3. 询问是否需要生成 PDF 或直接打印机打印。
 
-默认 Recipe Generation 使用完整解释版。交互选择只提供默认和厨房执行版两个输出模式；两个模式后续都可以生成 PDF 或直接打印。后续交付必须优先使用交互选择工具，选项为生成 PDF、直接打印、暂不需要。用户选择 PDF 或打印时，PDF / 纸质内容使用厨房执行版。用户选择直接打印时，必须先让用户选择打印设备。一次性生成的 PDF / 打印材料只能写入 `~/.rookie-cooking/tmp/print-jobs/`、`~/.rookie-cooking/tmp/pdfs/` 和 `~/.rookie-cooking/output/pdf/`，不能写入 `recipes/`；PDF 渲染成功后删除原始临时 Markdown。
+默认 Recipe Generation 使用完整解释版。交互选择只提供默认和厨房执行版两个输出模式；两个模式后续都可以生成 PDF 或直接打印。后续交付必须优先使用交互选择工具，选项为生成 PDF、直接打印、暂不需要。用户选择 PDF 或打印时，PDF / 纸质内容使用厨房执行版。用户选择直接打印时，必须先让用户选择打印设备。一次性生成的 PDF / 打印材料只能写入 `~/.rookie-cooking/tmp/print-jobs/`、`~/.rookie-cooking/tmp/pdfs/` 和 `~/.rookie-cooking/output/pdf/`，不能写入 `recipes/`；PDF 渲染成功后删除原始临时 Markdown。PDF 文件名使用与菜谱 `.md` 一致的汉语拼音 slug，加 `-kitchen.pdf` 后缀。
 
-如果用户明确说“快手”“厨房版”“只要步骤”，可以只输出厨房执行版，但不能删除安全提示和失败信号。
+如果用户明确说“快手”“厨房版”“只要步骤”，可以只输出厨房执行版，但必须保留安全提示和每步的出错补救。

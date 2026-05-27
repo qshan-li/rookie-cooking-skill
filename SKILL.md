@@ -1,9 +1,15 @@
 ---
-name: rookie-cooking-skill
-description: Use when generating, adapting, reviewing, or troubleshooting beginner-friendly cooking recipes with exact measurements, kitchen execution steps, failure diagnosis, cooking principles, substitutions, food-safety checks, equipment adaptation, taste preferences, full recipe output, or printable kitchen versions.
+name: rookie-cooking
+description: >-
+  Use when generating, adapting, reviewing, or troubleshooting beginner-friendly cooking recipes
+  with exact measurements, kitchen execution steps, failure diagnosis, cooking principles,
+  substitutions, food-safety checks, equipment adaptation, taste preferences, full recipe output,
+  or printable kitchen versions.
+version: 1.0.0
+homepage: https://github.com/Venancio-01/rookie-cooking-skill
 ---
 
-# Rookie Cooking Skill
+# Rookie Cooking
 
 Turn vague cooking instructions into executable kitchen documents for beginners. Prefer quantified parameters, visible state checks, and failure diagnosis over generic recipe prose.
 
@@ -20,6 +26,28 @@ Use these defaults when the user only names a dish:
 - Normal salt tolerance unless the user says otherwise.
 
 Do not ask follow-up questions before producing a useful first recipe unless a safety-critical constraint is missing or the runtime can present the optional first-run adaptation choice below without blocking the default path.
+
+## User Input Tools
+
+When this skill prompts the user for a choice, follow this tool-selection rule:
+
+1. **Prefer built-in user-input tools** exposed by the current agent runtime — e.g., `AskUserQuestion`, `request_user_input`, `clarify`, `ask_user`, or any equivalent.
+2. **Fallback**: if no such tool exists, emit a numbered plain-text message and ask the user to reply with the chosen number/answer for each question.
+3. **Batching**: if the tool supports multiple questions per call, combine all applicable questions into a single call; if only single-question, ask them one at a time in priority order.
+
+Do not use a plain-text question in Claude Code or any other runtime that supports structured choices.
+
+## Confirmation Policy
+
+Default behavior: **confirm before durable writes**.
+
+- Recipe Generation: no confirmation needed for output itself; confirm only before PDF/print delivery.
+- Memory Init / Update: show Write preview, then require explicit confirmation before any durable write.
+- Recipe Import: confirm persistence target (chat-only / save as draft / review existing).
+- Troubleshooting: feedback is recorded as pending candidate unless user confirms durable preference.
+- Sensitive data (allergies, pregnancy, child-specific rules, disease, religion, long-term dietary restrictions): require separate explicit confirmation before durable memory.
+
+Skip confirmation only when the user explicitly says to do so, for example: "直接保存", "不用确认", "跳过确认".
 
 ## Mode Selection
 
@@ -69,6 +97,8 @@ Ask the user to choose one recipe output mode:
 - **Default output: Full explanation version**: Complete explanation version, followed by a PDF or direct printing choice.
 - **Kitchen execution output**: Kitchen execution version only, followed by a PDF or direct printing choice.
 
+Recipe output mode is not a durable preference and must not be read from or written to the memory layer. If the recipe output mode is missing, present this output-mode choice every time an interactive choice tool is available, even when a profile exists. Profile memory may change servings, equipment, taste, household constraints, and prior dish adjustments; it must not skip the output-mode choice.
+
 If no local profile exists, do not generate the recipe after only the output-mode choice. Continue immediately to First-Run Adaptation Elicitation before recipe generation.
 
 If the interaction tool is unavailable, do not block generation. Continue with Default output and state that assumption briefly.
@@ -96,8 +126,10 @@ Every generated recipe must include:
 5. Substitutions for likely missing ingredients or tools.
 6. Failure diagnosis with possible cause and next adjustment.
 7. Related principles from `principles/`.
-8. A kitchen execution version that is short enough to scan while cooking when the user requests kitchen-only output, PDF generation, direct printing, or a persisted recipe file.
+8. A kitchen execution version that is short enough to scan while cooking only when the user explicitly chooses Kitchen execution output, Generate PDF, Direct print, Output kitchen execution text, or a persisted recipe-file workflow.
 9. An applied preferences or assumptions section listing servings, equipment, taste, household members if specified, and historical feedback if used.
+
+Default output chat body must contain only the full explanation version. Do not include a `## 厨房执行版` section, kitchen print-card body, or kitchen-only checklist in the default chat body. If the user later chooses Generate PDF or Direct print, derive the kitchen execution artifact only after the user chooses Generate PDF or Direct print.
 
 Avoid unqualified vague terms such as "适量", "少许", "一会儿", "炒熟", "差不多", or "收汁即可". If a sensory description is needed, pair it with a measurable range or state standard.
 
@@ -116,7 +148,7 @@ PDF and printed output must use the kitchen execution version, not the full expl
 - **Generate PDF**: Create the PDF for the user to open and print elsewhere.
 - **Output kitchen execution text**: Print the kitchen execution version in chat.
 
-Do not write one-off generated recipes to `recipes/`. That directory is only for maintained recipe content. For PDF or printing from a generated chat recipe, create a temporary kitchen execution artifact under `~/.rookie-cooking/tmp/print-jobs/`, then render it with `scripts/render_recipe_pdf.py --kitchen-markdown <path> --title <dish name>`. The renderer writes PDFs under `~/.rookie-cooking/output/pdf/` by default, deletes the temporary kitchen Markdown after a successful render, and does not duplicate an existing `-kitchen` suffix.
+Do not write one-off generated recipes to `recipes/`. That directory is only for maintained recipe content. For PDF or printing from a generated chat recipe, create a temporary kitchen execution artifact under `~/.rookie-cooking/tmp/print-jobs/`, derive a recipe-style pinyin slug matching maintained recipe filenames, then render it with `scripts/render_recipe_pdf.py --kitchen-markdown <path> --title <dish name> --output-stem <pinyin-slug>`. The renderer writes PDFs under `~/.rookie-cooking/output/pdf/` by default, deletes the temporary kitchen Markdown after a successful render, and does not duplicate an existing `-kitchen` suffix. PDF filenames should therefore be `<pinyin-slug>-kitchen.pdf`, matching the maintained recipe `.md` filename style.
 
 ## Troubleshooting Workflow
 
@@ -223,34 +255,49 @@ Use an interactive choice tool when the runtime provides one. If no interactive 
 
 Read only the files needed for the user request:
 
-- Full recipe output: `templates/recipe-full.md`. For Default output, use `templates/recipe-full.md` only. Do not load `templates/recipe-kitchen.md` for Default output.
-- Kitchen execution output: `templates/recipe-kitchen.md`. Load this only when the user chooses Kitchen execution output, Generate PDF, Direct print, Output kitchen execution text, or a persisted recipe file workflow needs it.
-- Principle explanation: `templates/principle-card.md` and relevant files in `principles/`.
-- Failure diagnosis: `templates/failure-diagnosis.md`.
-- Recipe quality review: `templates/recipe-review-checklist.md`.
-- Defaults and assumptions: `references/defaults.md`.
-- Heat wording and equipment mapping: `references/heat-levels.md` and `references/equipment-profiles.md`.
-- Unit conversion and no-scale fallback: `references/unit-conversion.md`.
-- Serving changes: `references/scaling-rules.md`.
-- Food safety: `references/food-safety-rules.md`.
-- User preferences and memory boundaries: `references/cooking-memory-layer.md`.
-- User profile shape: `references/user-profile.example.yaml`.
-- Feedback learning shape: `references/feedback-log.example.yaml`.
-- Memory merge rules: `references/memory-merge-rules.md`.
-- Local memory read/write CLI: `scripts/cooking_memory.py`.
-- Meal planning rules: `references/meal-planning-rules.md`.
-- Meal plan output: `templates/meal-plan.md`.
-- Recipe versioning rules: `references/recipe-versioning.md`.
-- Recipe changelog output: `templates/recipe-changelog.md`.
-- Recipe import rules: `references/recipe-import-rules.md`.
-- Imported recipe review output: `templates/imported-recipe-review.md`.
-- Recipe source and license notes: `references/source-notes.md`.
-- Real kitchen validation rules: `references/kitchen-validation.md`.
-- Printable output: `assets/print.css` and `scripts/render_recipe_pdf.py`.
-- Repository quality gates: `scripts/check_skill_completeness.py`.
-- Apply real kitchen validation records: `scripts/apply_kitchen_validation.py`.
-- Create blank kitchen validation records: `scripts/new_kitchen_validation_record.py`.
-- Prepare benchmark validation packet: `scripts/prepare_benchmark_validation.py`.
+### Templates
+
+| 文件 | 用途 |
+|---|---|
+| `templates/recipe-full.md` | 完整解释版输出（Default output 专用，不加载 kitchen 版） |
+| `templates/recipe-kitchen.md` | 厨房执行版输出（仅在选择 Kitchen output / PDF / 打印时加载） |
+| `templates/principle-card.md` | 原理卡输出（配合 `principles/` 下相关文件） |
+| `templates/failure-diagnosis.md` | 失败诊断输出 |
+| `templates/recipe-review-checklist.md` | 菜谱质量审查 |
+| `templates/meal-plan.md` | 一餐规划输出 |
+| `templates/recipe-changelog.md` | 菜谱变更日志 |
+| `templates/imported-recipe-review.md` | 导入菜谱审查 |
+
+### References
+
+| 文件 | 用途 |
+|---|---|
+| `references/defaults.md` | 默认假设和参数 |
+| `references/heat-levels.md` | 火力用语和设备映射 |
+| `references/equipment-profiles.md` | 设备特征 |
+| `references/unit-conversion.md` | 单位换算和无秤替代 |
+| `references/scaling-rules.md` | 份量缩放规则 |
+| `references/food-safety-rules.md` | 食品安全规则 |
+| `references/cooking-memory-layer.md` | 记忆层边界 |
+| `references/user-profile.example.yaml` | 用户偏好结构 |
+| `references/feedback-log.example.yaml` | 反馈日志结构 |
+| `references/memory-merge-rules.md` | 记忆合并规则 |
+| `references/meal-planning-rules.md` | 一餐规划规则 |
+| `references/recipe-import-rules.md` | 菜谱导入规则 |
+| `references/recipe-versioning.md` | 菜谱版本规则 |
+| `references/source-notes.md` | 来源和许可记录 |
+| `references/kitchen-validation.md` | 厨房实测规则 |
+
+### Scripts
+
+| 文件 | 用途 |
+|---|---|
+| `scripts/cooking_memory.py` | 记忆读写 CLI |
+| `scripts/render_recipe_pdf.py` | PDF 渲染 |
+| `scripts/check_skill_completeness.py` | 结构校验 |
+| `scripts/apply_kitchen_validation.py` | 应用厨房实测记录 |
+| `scripts/new_kitchen_validation_record.py` | 创建实测记录 |
+| `scripts/prepare_benchmark_validation.py` | 准备标杆实测包 |
 
 Use existing recipes under `recipes/` as examples only after checking that they passed the review checklist.
 
@@ -269,7 +316,7 @@ For user-imported recipes, use `references/recipe-import-rules.md` and `template
 5. If memory does not exist or the script reports invalid local memory, use First-Run Adaptation Elicitation before generating when interactive choices are available; otherwise continue with defaults. Do not block the requested recipe, diagnosis, explanation, meal plan, or import.
 6. Apply defaults, then durable profile preferences, then relevant recipe feedback suggestions, then first-run adaptation answers for this request, then explicit user overrides for this request.
 7. Load the relevant template and reference files.
-8. For Default output, output the full explanation version. For Kitchen execution output, output the kitchen execution version. For PDF, direct printing, or persisted recipe-file workflows, also prepare the kitchen execution version when needed.
+8. For Default output, output the full explanation version only. For Kitchen execution output, output the kitchen execution version only. For PDF, direct printing, or persisted recipe-file workflows, derive the kitchen execution version only when that delivery or persistence path is selected.
 9. Run the review checklist mentally before finalizing. Fix missing timing, heat, state, failure, safety, or substitution details.
 10. State which preferences or assumptions were used. If no memory profile exists, briefly mention whether defaults or one-time adaptation answers were used and that the user can explicitly initialize cooking preferences.
 11. For either Recipe Generation output mode, run the Post-Generation Delivery Flow.
@@ -277,12 +324,34 @@ For user-imported recipes, use `references/recipe-import-rules.md` and `template
 
 Safety overrides taste. When safety and texture conflict, keep the safety requirement and explain the texture tradeoff.
 
+## Completion Report
+
+After Recipe Generation finishes, display a structured summary before entering the Post-Generation Delivery Flow:
+
+```text
+菜谱生成完成!
+菜品: [dish name]
+模式: [Default output / Kitchen execution output]
+人数: [servings] 人份
+设备: [equipment summary]
+耗时: [total time]
+难度: [difficulty]
+相关原理: [principle card names]
+
+偏好/假设: [list of applied preferences or defaults]
+记忆状态: [profile exists / using defaults / one-time adaptation]
+```
+
+For Meal Planning, the report includes menu, timeline, and equipment conflicts.
+For Troubleshooting, the report includes issue label, safety triage result, and memory action taken.
+
 ## Memory Rules
 
 Distinguish temporary overrides from durable preferences:
 
 - "今天 4 人份" applies only to the current recipe.
 - "以后默认 4 人份" can become a durable serving preference.
+- "以后默认完整版", "以后默认厨房版", "以后总是生成 PDF", and similar output-mode or delivery preferences must not become durable memory; ask the Recipe Generation output-mode choice and delivery choice again each run when the runtime supports choices.
 - Missing memory is not an error. Use defaults and offer a lightweight initialization prompt only after completing the requested task.
 - First-run adaptation answers are session-only unless the user chooses Initialize long-term preferences.
 - Enter Memory Init / Update only when the user explicitly asks to initialize or change durable preferences.

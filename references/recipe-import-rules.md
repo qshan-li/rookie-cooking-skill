@@ -16,6 +16,22 @@
 - 通过 `templates/recipe-review-checklist.md` 后，才能改为 `passed`。
 - 用户实际执行并认可且有实测记录后，才能改为 `validated`。
 
+## 导入意图
+
+Recipe Import 先区分持久化目标，再区分输出形态，不要把两者混成一个选择。
+
+持久化目标：
+
+- 本次对话改写：默认选项，不保存到 `recipes/`，导入状态仍标记为 `draft`。
+- 保存为 draft 菜谱：需要来源说明和目标路径，不能标记为 `passed`。
+- Review existing draft：只审查已有 draft，按 review checklist 输出问题和下一步。
+
+输出形态：
+
+- 完整解释版：默认输出。
+- 厨房执行版：用户明确要求厨房版、PDF、打印或保存厨房执行材料时输出。
+- PDF / direct print：只能基于厨房执行版生成，不能把完整解释版直接打印成厨房版。
+
 ## 改写流程
 
 1. 识别原始菜名、份量、食材、步骤和来源。
