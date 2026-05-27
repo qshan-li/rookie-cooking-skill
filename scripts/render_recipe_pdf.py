@@ -5,8 +5,10 @@ from __future__ import annotations
 
 import argparse
 import html as html_lib
+import importlib.util
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 import markdown
@@ -18,6 +20,19 @@ DEFAULT_ARTIFACT_HOME = Path.home() / ".rookie-cooking"
 DEFAULT_OUTPUT_DIR = DEFAULT_ARTIFACT_HOME / "output" / "pdf"
 DEFAULT_TMP_DIR = DEFAULT_ARTIFACT_HOME / "tmp" / "pdfs"
 DEFAULT_CSS_PATH = Path("assets/print.css")
+
+
+def _load_printer_module():
+    """Dynamically load scripts/printer.py as a module."""
+    spec = importlib.util.spec_from_file_location(
+        "printer", Path(__file__).parent / "printer.py"
+    )
+    if spec is None or spec.loader is None:
+        raise RuntimeError("Unable to load printer.py")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
 
 
 def parse_args() -> argparse.Namespace:
@@ -69,6 +84,21 @@ def parse_args() -> argparse.Namespace:
         "--list-printers",
         action="store_true",
         help="List available printer devices and exit.",
+    )
+    parser.add_argument(
+        "--set-default",
+        metavar="PRINTER",
+        help="Set the default printer (IP or name) and exit.",
+    )
+    parser.add_argument(
+        "--test-printer",
+        metavar="IP",
+        help="Test connectivity to a printer by IP and exit.",
+    )
+    parser.add_argument(
+        "--rediscover",
+        action="store_true",
+        help="Force printer rediscovery (ignore cached printers).",
     )
     return parser.parse_args()
 
@@ -185,10 +215,19 @@ def find_chrome() -> str:
     )
 
 
-def list_printers() -> list[str]:
+def list_printers(force_rediscover: bool = False) -> list[str]:
+    """List available printers. Delegates to printer.discover_printers(), falls back to CUPS."""
+    try:
+        printer_mod = _load_printer_module()
+        printers = printer_mod.discover_printers(force_rediscover=force_rediscover)
+        return [f"{p.name} ({p.ip})" if p.name != p.ip else p.ip for p in printers]
+    except Exception:
+        pass
+
+    # CUPS fallback
     lpstat_path = shutil.which("lpstat")
     if not lpstat_path:
-        raise RuntimeError("No lpstat executable found. Install CUPS tools to list printers.")
+        raise RuntimeError("No printer discovery method available. Install CUPS tools or configure a network printer.")
 
     completed = subprocess.run(
         [lpstat_path, "-e"],
@@ -227,6 +266,16 @@ def render_pdf(chrome: str, html_path: Path, pdf_path: Path) -> None:
 
 
 def print_pdf(pdf_path: Path, printer: str | None = None) -> None:
+    """Print PDF. Try IPP first, fall back to CUPS lp/lpr."""
+    try:
+        printer_mod = _load_printer_module()
+        result = printer_mod.print_file(pdf_path, printer)
+        if result.success:
+            return
+    except Exception:
+        pass  # fall through to CUPS
+
+    # CUPS fallback
     lp_path = shutil.which("lp")
     if lp_path:
         command = [lp_path]
@@ -236,7 +285,9 @@ def print_pdf(pdf_path: Path, printer: str | None = None) -> None:
     else:
         lpr_path = shutil.which("lpr")
         if not lpr_path:
-            raise RuntimeError("No lp or lpr executable found. Install a system print command first.")
+            raise RuntimeError(
+                "打印失败: IPP 和 CUPS 均不可用。请检查打印机连接或安装 CUPS 工具。"
+            )
         command = [lpr_path]
         if printer:
             command.extend(["-P", printer])
@@ -245,7 +296,7 @@ def print_pdf(pdf_path: Path, printer: str | None = None) -> None:
     completed = subprocess.run(command, check=False, text=True, capture_output=True)
     if completed.returncode != 0:
         raise RuntimeError(
-            "System printing failed:\n"
+            "CUPS 打印失败:\n"
             f"stdout:\n{completed.stdout}\n"
             f"stderr:\n{completed.stderr}"
         )
@@ -253,8 +304,27 @@ def print_pdf(pdf_path: Path, printer: str | None = None) -> None:
 
 def main() -> None:
     args = parse_args()
+
+    if args.set_default:
+        printer_mod = _load_printer_module()
+        printer_mod.set_default_printer(args.set_default)
+        print(f"默认打印机已设置: {args.set_default}")
+        return
+
+    if args.test_printer:
+        printer_mod = _load_printer_module()
+        try:
+            info = printer_mod.ipp_get_printer_attributes(args.test_printer)
+            print(f"打印机可达: {args.test_printer}")
+            print(f"  状态: {info.status}")
+        except printer_mod.PrinterError as exc:
+            print(f"打印机不可达: {args.test_printer}")
+            print(f"  错误: {exc.message}")
+            sys.exit(1)
+        return
+
     if args.list_printers:
-        for printer in list_printers():
+        for printer in list_printers(force_rediscover=args.rediscover):
             print(printer)
         return
 

@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-This is a documentation-first cooking skill repository. Core skill instructions live in `SKILL.md`, with agent configuration in `agents/openai.yaml`. Requirements and planning documents are in `docs/`. Reusable recipe and review formats live in `templates/`. Recipe content is grouped by dish type under `recipes/`, for example `recipes/vegetable/fan-qie-chao-dan.md`. Cooking principles belong in `principles/`, shared lookup material in `references/`, styling assets in `assets/`, validation utilities in `scripts/`, and automated checks in `tests/`.
+This is a documentation-first cooking skill repository. Core skill instructions live in `SKILL.md`, with agent configuration in `agents/openai.yaml`. Requirements and planning documents are in `docs/`. Reusable recipe and review formats live in `templates/`. Recipe content is grouped by dish type under `recipes/`, for example `recipes/vegetable/fan-qie-chao-dan.md`. Cooking principles belong in `principles/`, shared lookup material in `references/`, styling assets in `assets/`, validation utilities in `scripts/`, IPP network printing in `scripts/printer.py`, and automated checks in `tests/`.
 
 ## Build, Test, and Development Commands
 
@@ -11,6 +11,8 @@ No package manager or build system is required at the moment. Use Python directl
 - `python -m unittest discover -s tests` runs the full test suite.
 - `python scripts/check_skill_completeness.py` validates required skill structure, principle counts, recipe counts, source notes, and kitchen validation status.
 - `python scripts/render_recipe_pdf.py <recipe.md>` renders a recipe using `assets/print.css` when PDF output is needed.
+- `python scripts/render_recipe_pdf.py --test-printer <ip>` tests connectivity to a network printer.
+- `python scripts/render_recipe_pdf.py --set-default <ip>` sets the default printer in config.
 
 Run commands from the repository root so relative paths resolve correctly.
 

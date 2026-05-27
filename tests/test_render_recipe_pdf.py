@@ -3,7 +3,7 @@ from pathlib import Path
 import sys
 from tempfile import TemporaryDirectory
 import unittest
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 
 MODULE_PATH = Path(__file__).resolve().parents[1] / "scripts" / "render_recipe_pdf.py"
@@ -127,6 +127,7 @@ class RenderRecipePdfTest(unittest.TestCase):
             stderr = ""
 
         with (
+            patch.object(module, "_load_printer_module", side_effect=RuntimeError("no printer module")),
             patch.object(module.shutil, "which", return_value="/usr/bin/lpstat"),
             patch.object(module.subprocess, "run", return_value=Completed()) as run,
         ):
@@ -374,6 +375,55 @@ class RenderRecipePdfTest(unittest.TestCase):
 
         self.assertEqual(expected_home / "output" / "pdf", module.DEFAULT_OUTPUT_DIR)
         self.assertEqual(expected_home / "tmp" / "pdfs", module.DEFAULT_TMP_DIR)
+
+    def test_main_set_default_printer(self):
+        module = load_module()
+        mock_printer = MagicMock()
+        argv = ["render_recipe_pdf.py", "--set-default", "192.168.1.100"]
+        with (
+            patch.object(sys, "argv", argv),
+            patch.object(module, "_load_printer_module", return_value=mock_printer),
+            patch("builtins.print") as print_call,
+        ):
+            module.main()
+        mock_printer.set_default_printer.assert_called_once_with("192.168.1.100")
+        print_call.assert_any_call("默认打印机已设置: 192.168.1.100")
+
+    def test_main_test_printer_success(self):
+        module = load_module()
+        mock_printer = MagicMock()
+        mock_printer.ipp_get_printer_attributes.return_value = MagicMock(status="idle")
+        argv = ["render_recipe_pdf.py", "--test-printer", "192.168.1.50"]
+        with (
+            patch.object(sys, "argv", argv),
+            patch.object(module, "_load_printer_module", return_value=mock_printer),
+            patch("builtins.print") as print_call,
+        ):
+            module.main()
+        mock_printer.ipp_get_printer_attributes.assert_called_once_with("192.168.1.50")
+        print_call.assert_any_call("打印机可达: 192.168.1.50")
+
+    def test_main_test_printer_failure_exits_nonzero(self):
+        module = load_module()
+
+        class FakePrinterError(Exception):
+            def __init__(self):
+                super().__init__("打印机当前不可用")
+                self.message = "打印机当前不可用"
+
+        mock_printer = MagicMock()
+        mock_printer.PrinterError = FakePrinterError
+        mock_printer.ipp_get_printer_attributes.side_effect = FakePrinterError()
+        argv = ["render_recipe_pdf.py", "--test-printer", "192.168.1.50"]
+        with (
+            patch.object(sys, "argv", argv),
+            patch.object(module, "_load_printer_module", return_value=mock_printer),
+            patch("builtins.print") as print_call,
+            self.assertRaises(SystemExit) as ctx,
+        ):
+            module.main()
+        self.assertEqual(ctx.exception.code, 1)
+        print_call.assert_any_call("打印机不可达: 192.168.1.50")
 
 
 if __name__ == "__main__":
