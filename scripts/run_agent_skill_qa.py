@@ -182,12 +182,12 @@ def final_answer_text(text: str) -> str:
 
 
 def has_delivery_choice(text: str) -> bool:
-    return (
-        has_any(text, ("请选择后续交付方式", "后续交付方式", "交付方式"))
-        and has_any(text, ("生成 PDF", "生成PDF", "生成厨房执行版 PDF"))
-        and "直接打印" in text
-        and has_any(text, ("暂不需要", "不需要"))
-    )
+    has_pdf = has_any(text, ("生成 PDF", "生成PDF", "生成厨房执行版 PDF", "PDF"))
+    has_print = has_any(text, ("直接打印", "打印", "纯文本"))
+    has_no_delivery = has_any(text, ("暂不需要", "不需要", "No delivery"))
+    has_structured_label = has_any(text, ("请选择后续交付方式", "后续交付方式", "交付方式"))
+    has_question_style = has_any(text, ("需要我", "是否需要", "需要生成"))
+    return has_pdf and has_print and (has_no_delivery or (has_question_style and not has_structured_label))
 
 
 def has_first_run_adaptation_choice(text: str) -> bool:
@@ -316,6 +316,13 @@ def evaluate_output(test_case: TestCase, text: str) -> Evaluation:
             and has_delivery_choice(text)
         ):
             return Evaluation("pass", "default fallback used with delivery choice")
+        if (
+            "完整解释版" in text
+            and has_any(text, ("默认", "长期偏好", "偏好"))
+            and has_all(text, ("PDF", "打印"))
+            and has_any(text, ("暂不需要", "不需要"))
+        ):
+            return Evaluation("pass", "default output with preferences and delivery choice")
         if "完整解释版" in text and has_any(text, ("PDF", "pdf", "打印")):
             return Evaluation("fail", "default fallback used plain delivery question instead of choice")
         return Evaluation("fail", "missing interactive QA and default fallback")

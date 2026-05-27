@@ -11,9 +11,10 @@ when_to_use: >-
   Use this skill when the user asks to cook a dish, needs a recipe with exact measurements,
   wants to diagnose a cooking failure, learn a cooking principle, plan a meal, import a recipe,
   or initialize cooking preferences. Trigger on keywords like "recipe", "cook", "做菜", "菜谱",
-  "烹饪", "做饭", "炒", "炖", "蒸", "烤".
+  "烹饪", "做饭", "炒", "炖", "蒸", "烤", "改写", "重写", "rewrite".
 metadata:
   openclaw:
+    status: experimental
     requires:
       bins:
         - python3
@@ -73,7 +74,7 @@ Skip confirmation only when the user explicitly says to do so, for example: "直
 - **Troubleshooting**: User reports a failed result. Diagnose likely causes, next adjustment, and safety risk.
 - **Learning**: User asks why something works or failed. Start with a concise L1 answer, then progressively deepen to L2 (expanded) and L3 (full principle card) on user request. Offer to transition into Recipe Generation for hands-on verification. Record depth in Learning Log.
 - **Meal Planning**: User asks for a meal, multiple dishes, shopping list, or cooking schedule. Output a meal plan with menu, kitchen timeline, and equipment conflicts; elicit the shopping list mode before generating shopping-list details.
-- **Recipe Import**: User provides an external, pasted, or self-authored recipe. Rewrite it into this skill's recipe schema and keep the initial Review status as `draft`.
+- **Recipe Import**: User provides an external, pasted, or self-authored recipe, or asks to rewrite/改写 an existing recipe into a structured format. Rewrite it into this skill's recipe schema and keep the initial Review status as `draft`.
 - **Memory Init / Update**: User explicitly asks to initialize or update preferences, equipment, dislikes, household members, or historical feedback. Do not enter this flow just because no profile exists.
 
 ## Shared Elicitation Contract
@@ -152,13 +153,15 @@ Avoid unqualified vague terms such as "适量", "少许", "一会儿", "炒熟",
 
 ## Post-Generation Delivery Flow
 
-After either Recipe Generation output mode finishes, offer delivery choices. Use an interactive choice tool whenever the runtime provides one; do not use a plain text question in Claude Code or any other runtime that supports structured choices.
+After either Recipe Generation output mode finishes, offer delivery choices. Use an interactive choice tool whenever the runtime provides one; do not use a plain text question in Claude Code or any other runtime that supports structured choices. If the runtime has no interactive choice tool, use a plain text question that explicitly lists all three options so the user can reply with a keyword. Always present all three options; never omit any option or merge them.
 
 The delivery choices are:
 
-- **Generate PDF**: Render a kitchen execution PDF.
-- **Direct print**: Print the kitchen execution PDF after printer selection.
-- **No delivery**: End after the chat output.
+- **Generate PDF** (用户可回复"PDF"或"生成 PDF")：Render a kitchen execution PDF.
+- **Direct print** (用户可回复"打印"或"直接打印")：Print the kitchen execution PDF after printer selection.
+- **No delivery** (用户可回复"暂不需要"或"不需要")：End after the chat output.
+
+Example plain text delivery question (when no interactive choice tool is available): "需要我生成 PDF、直接打印，还是暂不需要？"
 
 PDF and printed output must use the kitchen execution version, not the full explanation version. If the user chooses direct printing, ask them to choose a printer device before printing. List available printers before asking for the device. Direct printing supports network printers via IPP (port 631) without requiring CUPS; on WSL, printer discovery is automatic via PowerShell. Use `--set-default <ip>` to pre-configure a printer for future sessions, and `--test-printer <ip>` to verify connectivity. If no printer service or printer device is available, use an interactive choice tool again with these fallback choices:
 

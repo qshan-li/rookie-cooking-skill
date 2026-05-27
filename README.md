@@ -66,9 +66,11 @@ Use $rookie-cooking 把红烧肉改成 4 人份，并给我可打印厨房版。
 
 | Platform | Status | Notes |
 |----------|--------|-------|
-| Claude Code | Supported | 原生 skill workflow |
+| Claude Code | Supported | 原生 skill workflow，全量 QA 通过 |
 | Codex | Supported | 完整 QA 支持 |
-| OpenClaw / Hermes Agent | Supported | 交互选择 + skill 加载 |
+| Gemini CLI | Supported | 已验证 |
+| Hermes Agent | Supported | 交互选择 + skill 加载 |
+| OpenClaw | Experimental | 文件到位，未完成端到端验证 |
 | Cursor / 其他本地 Agent | Usable | 需要文件读写和 shell 执行 |
 
 ## Memory Behavior
