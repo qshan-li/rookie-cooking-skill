@@ -3,7 +3,10 @@
 - ID：`acid-base`
 - 名称：酸碱
 - 一句话解释：酸能嫩化肉质、防止氧化、平衡味道，但用量过多会破坏口感和营养。
-- 适用菜谱：`tomato-egg`、`hongshaorou`、`stir-fried-greens`
+- 适用菜谱：
+  - `tomato-egg` → `recipes/vegetable/fan-qie-chao-dan.md` — 验证点：番茄炒出酸汁后加糖平衡酸味
+  - `hongshaorou` → `recipes/meat/hong-shao-rou.md` — 验证点：加醋让肉质更嫩，但收汁前酸味应挥发
+  - `stir-fried-greens` → `recipes/vegetable/qing-chao-xiao-qing-cai.md` — 验证点：出锅前点醋保持翠绿
 - 来源：Harold McGee, On Food and Cooking；食品化学教材。
 
 ## 原理描述

@@ -3,7 +3,9 @@
 - ID：`collagen-gelatin`
 - 名称：胶原蛋白和明胶
 - 一句话解释：肉中的胶原蛋白在长时间低温烹饪中转化为明胶，使肉质变软、汤汁浓稠，是炖肉软烂的关键。
-- 适用菜谱：`hongshaorou`、炖肉、肉汤
+- 适用菜谱：
+  - `hongshaorou` → `recipes/meat/hong-shao-rou.md` — 验证点：炖 90 分钟后肉块用筷子能轻松插入，汤汁变粘稠
+  - 炖肉、肉汤 — 通用场景，长时间低温炖煮是胶原转化为明胶的关键
 - 来源：Harold McGee, On Food and Cooking；Modernist Cuisine；食品化学教材。
 
 ## 原理描述

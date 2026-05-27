@@ -9,6 +9,7 @@ from datetime import datetime
 import json
 import os
 from pathlib import Path
+import re
 import sys
 from typing import Any
 
@@ -16,8 +17,11 @@ from typing import Any
 PROFILE_FILE = "profile.yaml"
 FEEDBACK_FILE = "feedback.jsonl"
 CANDIDATES_FILE = "memory-candidates.jsonl"
+LEARNING_FILE = "learning-log.jsonl"
 DEFAULT_MEMORY_DIR = ".rookie-cooking"
 ENV_MEMORY_HOME = "ROOKIE_COOKING_HOME"
+DRAFTS_DIR = "drafts"
+RECIPES_DIR = "recipes"
 
 SENSITIVE_PATH_PARTS = {
     "allergies",
@@ -58,6 +62,18 @@ def feedback_path(root: Path) -> Path:
 
 def candidates_path(root: Path) -> Path:
     return root / CANDIDATES_FILE
+
+
+def learning_path(root: Path) -> Path:
+    return root / LEARNING_FILE
+
+
+def drafts_dir(root: Path) -> Path:
+    return root / DRAFTS_DIR
+
+
+def user_recipes_dir(root: Path) -> Path:
+    return root / RECIPES_DIR
 
 
 def default_profile() -> dict[str, Any]:
@@ -654,6 +670,9 @@ def delete_memory(root: Path, target: str) -> dict[str, Any]:
     if target in {"candidates", CANDIDATES_FILE}:
         candidates_path(root).unlink(missing_ok=True)
         return {"deleted": CANDIDATES_FILE}
+    if target in {"learning", "learning-log", LEARNING_FILE}:
+        learning_path(root).unlink(missing_ok=True)
+        return {"deleted": LEARNING_FILE}
     if target in latest_candidates(root):
         rejected = reject_candidate(root, target)
         return {"deleted": target, "status": rejected["status"]}
@@ -682,8 +701,112 @@ def ignore_once(dish: str) -> dict[str, Any]:
     return {"ignored_once": dish}
 
 
+VALID_LEVELS = {"L1", "L2", "L3"}
+
+
+def append_learning(root: Path, principle_id: str, level: str) -> dict[str, Any]:
+    if level not in VALID_LEVELS:
+        raise MemoryDataError(f"Invalid learning level: {level}. Must be one of {VALID_LEVELS}")
+    entry = {
+        "principle_id": principle_id,
+        "level": level,
+        "timestamp": datetime.now().isoformat(timespec="seconds"),
+    }
+    append_jsonl(learning_path(root), entry)
+    return entry
+
+
+def query_learning(root: Path, principle_id: str) -> dict[str, Any]:
+    entries, warnings = read_jsonl(learning_path(root))
+    matches = [e for e in entries if e.get("principle_id") == principle_id]
+    if not matches:
+        return {"principle_id": principle_id, "found": False, "levels": [], "warnings": warnings}
+    levels = [e.get("level") for e in matches if e.get("level") in VALID_LEVELS]
+    latest = matches[-1]
+    return {
+        "principle_id": principle_id,
+        "found": True,
+        "levels": levels,
+        "latest_level": latest.get("level"),
+        "latest_timestamp": latest.get("timestamp"),
+        "count": len(matches),
+        "warnings": warnings,
+    }
+
+
 def print_json(value: Any) -> None:
     print(json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True))
+
+
+def list_drafts(root: Path) -> dict[str, Any]:
+    drafts_path = drafts_dir(root)
+    if not drafts_path.exists():
+        return {"drafts": [], "count": 0}
+    drafts = []
+    for path in sorted(drafts_path.glob("*.md")):
+        text = path.read_text(encoding="utf-8")
+        status_match = re.search(r"status:\s*(\S+)", text)
+        source_match = re.search(r"source:\s*(\S+)", text)
+        name_match = re.search(r"name:\s*(\S+)", text)
+        drafts.append({
+            "filename": path.name,
+            "name": name_match.group(1) if name_match else path.stem,
+            "status": status_match.group(1) if status_match else "unknown",
+            "source": source_match.group(1) if source_match else "unknown",
+        })
+    return {"drafts": drafts, "count": len(drafts)}
+
+
+def list_user_recipes(root: Path) -> dict[str, Any]:
+    recipes_path = user_recipes_dir(root)
+    if not recipes_path.exists():
+        return {"recipes": [], "count": 0}
+    recipes = []
+    for path in sorted(recipes_path.glob("*.md")):
+        text = path.read_text(encoding="utf-8")
+        status_match = re.search(r"status:\s*(\S+)", text)
+        source_match = re.search(r"source:\s*(\S+)", text)
+        name_match = re.search(r"name:\s*(\S+)", text)
+        recipes.append({
+            "filename": path.name,
+            "name": name_match.group(1) if name_match else path.stem,
+            "status": status_match.group(1) if status_match else "unknown",
+            "source": source_match.group(1) if source_match else "unknown",
+        })
+    return {"recipes": recipes, "count": len(recipes)}
+
+
+def promote_draft(root: Path, filename: str) -> dict[str, Any]:
+    src = drafts_dir(root) / filename
+    if not src.exists():
+        raise MemoryDataError(f"Draft not found: {src}")
+
+    text = src.read_text(encoding="utf-8")
+
+    # Update status from draft to passed
+    if "status: draft" in text:
+        text = text.replace("status: draft", "status: passed", 1)
+    elif "status: passed" in text:
+        pass  # Already passed, just move
+    else:
+        raise MemoryDataError(f"Cannot find 'status: draft' in {filename}")
+
+    # Write to user recipes dir
+    dst_dir = user_recipes_dir(root)
+    dst_dir.mkdir(parents=True, exist_ok=True)
+    dst = dst_dir / filename
+    if dst.exists():
+        raise MemoryDataError(f"Target already exists: {dst}")
+
+    dst.write_text(text, encoding="utf-8")
+    src.unlink()
+
+    return {
+        "promoted": filename,
+        "from": str(src),
+        "to": str(dst),
+        "new_status": "passed",
+    }
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -724,6 +847,20 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
     ignore_parser = subparsers.add_parser("ignore-once", help="Ignore dish memory for one response.")
     ignore_parser.add_argument("--dish", required=True)
+
+    append_learning_parser = subparsers.add_parser("append-learning", help="Record a learning interaction.")
+    append_learning_parser.add_argument("--principle", required=True, help="Principle ID (e.g. maillard).")
+    append_learning_parser.add_argument("--level", required=True, choices=["L1", "L2", "L3"], help="Explanation depth level.")
+
+    query_learning_parser = subparsers.add_parser("query-learning", help="Query learning history for a principle.")
+    query_learning_parser.add_argument("--principle", required=True, help="Principle ID (e.g. maillard).")
+
+    subparsers.add_parser("list-drafts", help="List draft recipes in ~/.rookie-cooking/drafts/.")
+
+    subparsers.add_parser("list-user-recipes", help="List passed/validated recipes in ~/.rookie-cooking/recipes/.")
+
+    promote_parser = subparsers.add_parser("promote-draft", help="Move a draft recipe to passed status.")
+    promote_parser.add_argument("filename", help="Draft filename (e.g. ma-po-dou-fu.md).")
 
     return parser.parse_args(argv)
 
@@ -773,6 +910,16 @@ def main(argv: list[str] | None = None) -> int:
             print_json(delete_memory(root, args.target))
         elif args.command == "ignore-once":
             print_json(ignore_once(args.dish))
+        elif args.command == "append-learning":
+            print_json(append_learning(root, args.principle, args.level))
+        elif args.command == "query-learning":
+            print_json(query_learning(root, args.principle))
+        elif args.command == "list-drafts":
+            print_json(list_drafts(root))
+        elif args.command == "list-user-recipes":
+            print_json(list_user_recipes(root))
+        elif args.command == "promote-draft":
+            print_json(promote_draft(root, args.filename))
         else:
             raise MemoryDataError(f"Unknown command: {args.command}")
     except MemoryDataError as error:

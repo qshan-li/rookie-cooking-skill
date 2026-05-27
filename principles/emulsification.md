@@ -3,7 +3,9 @@
 - ID：`emulsification`
 - 名称：乳化
 - 一句话解释：油和水本来不相溶，通过搅拌、加热或加入乳化剂可以形成稳定的混合液，让酱汁和汤汁更浓稠顺滑。
-- 适用菜谱：`hongshaorou`、`stir-fried-greens`
+- 适用菜谱：
+  - `hongshaorou` → `recipes/meat/hong-shao-rou.md` — 验证点：收汁时油脂和酱汁乳化，勺子划过能见到锅底
+  - `stir-fried-greens` → `recipes/vegetable/qing-chao-xiao-qing-cai.md` — 验证点：出锅前快速翻炒让油和菜汁混合，不分离
 - 来源：Harold McGee, On Food and Cooking；基础烹饪科学。
 
 ## 原理描述

@@ -3,7 +3,9 @@
 - ID：`wok-heat`
 - 名称：锅温和锅气
 - 一句话解释：锅温足、食材不拥挤、水分快速蒸发，才会有清爽香味；锅温掉下去就容易出水变闷。
-- 适用菜谱：`stir-fried-greens`、`qingjiao-rousi`
+- 适用菜谱：
+  - `stir-fried-greens` → `recipes/vegetable/qing-chao-xiao-qing-cai.md` — 验证点：青菜下锅后应有持续滋响，静默说明锅温不够
+  - `qingjiao-rousi` → `recipes/meat/qing-jiao-rou-si.md` — 验证点：肉丝下锅后 3 秒内开始变色，否则锅温不足
 - 来源：Modernist Cuisine；The Culinary Institute of America, The Professional Chef；中式快炒经验和传热常识。
 
 ## 原理描述

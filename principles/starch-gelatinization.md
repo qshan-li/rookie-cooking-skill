@@ -3,7 +3,9 @@
 - ID：`starch-gelatinization`
 - 名称：淀粉糊化
 - 一句话解释：淀粉遇水受热会吸水变稠，用得好能锁水挂汁，用过头会结块或糊底。
-- 适用菜谱：`qingjiao-rousi`、`tomato-egg`
+- 适用菜谱：
+  - `qingjiao-rousi` → `recipes/meat/qing-jiao-rou-si.md` — 验证点：肉丝上浆（淀粉+水）后滑炒，淀粉糊化锁住水分
+  - `tomato-egg` → `recipes/vegetable/fan-qie-chao-dan.md` — 验证点：番茄汁加少许淀粉水勾芡，汤汁变稠能挂住蛋块
 - 来源：Harold McGee, On Food and Cooking；食品化学教材；基础烹饪科学。
 
 ## 原理描述

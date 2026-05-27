@@ -3,7 +3,10 @@
 - ID：`heat-transfer`
 - 名称：传热
 - 一句话解释：热量通过传导、对流、辐射三种方式传递到食材，不同烹饪方式利用不同的传热原理。
-- 适用菜谱：`hongshaorou`、`stir-fried-greens`、`steamed-egg`
+- 适用菜谱：
+  - `hongshaorou` → `recipes/meat/hong-shao-rou.md` — 验证点：煸炒阶段是传导传热，加水炖后变为对流传热
+  - `stir-fried-greens` → `recipes/vegetable/qing-chao-xiao-qing-cai.md` — 验证点：快炒靠锅底传导，翻勺让对流均匀
+  - `steamed-egg` → `recipes/soup/zheng-dan-geng.md` — 验证点：蒸是水蒸气对流传热，盖保鲜膜防止冷凝水滴入
 - 来源：Harold McGee, On Food and Cooking；Modernist Cuisine；基础物理传热原理。
 
 ## 原理描述

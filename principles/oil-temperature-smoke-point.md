@@ -3,7 +3,10 @@
 - ID：`oil-temperature-smoke-point`
 - 名称：油温和烟点
 - 一句话解释：油温决定入锅反应速度；油开始明显冒烟通常说明温度过高或油不适合继续高温。
-- 适用菜谱：`tomato-egg`、`qingjiao-rousi`、`stir-fried-greens`
+- 适用菜谱：
+  - `tomato-egg` → `recipes/vegetable/fan-qie-chao-dan.md` — 验证点：蛋液入锅时油温够热，蛋会迅速膨胀蓬松
+  - `qingjiao-rousi` → `recipes/meat/qing-jiao-rou-si.md` — 验证点：筷子入油看气泡速度判断油温是否到位
+  - `stir-fried-greens` → `recipes/vegetable/qing-chao-xiao-qing-cai.md` — 验证点：青菜入锅瞬间油花翻滚，不是沉底不动
 - 来源：Harold McGee, On Food and Cooking；Modernist Cuisine；基础烹饪科学；具体油品烟点因精炼程度和使用次数不同而变化。
 
 ## 原理描述

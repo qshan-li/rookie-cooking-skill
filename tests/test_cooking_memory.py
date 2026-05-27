@@ -290,6 +290,61 @@ class CookingMemoryTest(unittest.TestCase):
         output = "".join(call.args[0] for call in stdout.write.call_args_list)
         self.assertTrue(json.loads(output)["memory_found"])
 
+    def test_append_learning_records_principle_and_level(self):
+        memory = load_memory_module()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            entry = memory.append_learning(root, "maillard", "L1")
+
+        self.assertEqual("maillard", entry["principle_id"])
+        self.assertEqual("L1", entry["level"])
+        self.assertIn("timestamp", entry)
+
+    def test_append_learning_rejects_invalid_level(self):
+        memory = load_memory_module()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            with self.assertRaises(memory.MemoryDataError):
+                memory.append_learning(root, "maillard", "L4")
+
+    def test_query_learning_returns_not_found_for_empty_log(self):
+        memory = load_memory_module()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            result = memory.query_learning(root, "maillard")
+
+        self.assertFalse(result["found"])
+        self.assertEqual([], result["levels"])
+
+    def test_query_learning_returns_all_levels_after_multiple_appends(self):
+        memory = load_memory_module()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            memory.append_learning(root, "maillard", "L1")
+            memory.append_learning(root, "maillard", "L2")
+            memory.append_learning(root, "wok-heat", "L1")
+            result = memory.query_learning(root, "maillard")
+
+        self.assertTrue(result["found"])
+        self.assertEqual(["L1", "L2"], result["levels"])
+        self.assertEqual("L2", result["latest_level"])
+        self.assertEqual(2, result["count"])
+
+    def test_delete_learning_removes_log_file(self):
+        memory = load_memory_module()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            memory.append_learning(root, "maillard", "L1")
+            memory.delete_memory(root, "learning")
+            result = memory.query_learning(root, "maillard")
+
+        self.assertFalse(result["found"])
+
 
 if __name__ == "__main__":
     unittest.main()

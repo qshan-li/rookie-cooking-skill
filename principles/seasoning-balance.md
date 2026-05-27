@@ -3,7 +3,10 @@
 - ID：`seasoning-balance`
 - 名称：调味平衡
 - 一句话解释：咸、甜、酸、鲜和油脂要互相支撑，味道寡淡不一定只是盐少。
-- 适用菜谱：`tomato-egg`、`hongshaorou`、`stir-fried-greens`
+- 适用菜谱：
+  - `tomato-egg` → `recipes/vegetable/fan-qie-chao-dan.md` — 验证点：番茄酸味需要糖来平衡，不是只加盐
+  - `hongshaorou` → `recipes/meat/hong-shao-rou.md` — 验证点：酱油、糖、盐的比例决定红烧味型，缺一味就失衡
+  - `stir-fried-greens` → `recipes/vegetable/qing-chao-xiao-qing-cai.md` — 验证点：清炒只需盐和少许糖提鲜，不需要复杂调味
 - 来源：Harold McGee, On Food and Cooking；America's Test Kitchen, The Science of Good Cooking；家常调味经验和基础味觉原理。
 
 ## 原理描述

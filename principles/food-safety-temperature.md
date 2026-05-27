@@ -3,7 +3,10 @@
 - ID：`food-safety-temperature`
 - 名称：食品安全温度
 - 一句话解释：温度计是判断肉、蛋、海鲜和剩菜安全性的最可靠工具；无温度计感官判断只能作为保守替代。
-- 适用菜谱：`qingjiao-rousi`、`steamed-egg`、`hongshaorou`
+- 适用菜谱：
+  - `qingjiao-rousi` → `recipes/meat/qing-jiao-rou-si.md` — 验证点：肉丝变白不等于熟透，用温度计确认中心达 71°C
+  - `steamed-egg` → `recipes/soup/zheng-dan-geng.md` — 验证点：蛋羹中心温度达 74°C 时凝固安全，表面不晃动
+  - `hongshaorou` → `recipes/meat/hong-shao-rou.md` — 验证点：炖肉中心温度达 85°C 以上时胶原充分溶出
 - 来源：USDA FSIS Safe Minimum Internal Temperature Chart；FDA Food Code 2022；中国 GB 31654-2021《食品安全国家标准 餐饮服务通用卫生规范》；FoodSafety.gov Safe Minimum Internal Temperatures。
 
 ## 原理描述

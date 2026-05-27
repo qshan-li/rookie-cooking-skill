@@ -3,7 +3,10 @@
 - ID：`osmosis-diffusion`
 - 名称：渗透与扩散
 - 一句话解释：盐、糖等物质通过渗透和扩散进入食材内部，时间和浓度决定了入味深度和速度。
-- 适用菜谱：`hongshaorou`、`stir-fried-greens`、`steamed-egg`
+- 适用菜谱：
+  - `hongshaorou` → `recipes/meat/hong-shao-rou.md` — 验证点：炖煮时间足够长，盐和酱油才能渗透到肉块中心
+  - `stir-fried-greens` → `recipes/vegetable/qing-chao-xiao-qing-cai.md` — 验证点：盐放太早青菜细胞液渗出，表面变蔫
+  - `steamed-egg` → `recipes/soup/zheng-dan-geng.md` — 验证点：蛋液加温水后静置 5 分钟，让盐均匀扩散
 - 来源：Harold McGee, On Food and Cooking；食品化学教材。
 
 ## 原理描述

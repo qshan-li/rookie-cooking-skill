@@ -6,7 +6,7 @@ description: >-
   substitutions, food-safety checks, equipment adaptation, taste preferences, full recipe output,
   or printable kitchen versions.
 version: 1.0.0
-homepage: https://github.com/Venancio-01/rookie-cooking-skill
+homepage: https://github.com/qshan-li/rookie-cooking-skill
 ---
 
 # Rookie Cooking
@@ -55,7 +55,7 @@ Skip confirmation only when the user explicitly says to do so, for example: "直
   - **Default output: Full explanation version**. Generate the complete explanation version, then ask whether to generate a PDF or send output to the printer.
   - **Kitchen execution output**: Generate the kitchen execution version, then ask whether to generate a PDF or send output to the printer.
 - **Troubleshooting**: User reports a failed result. Diagnose likely causes, next adjustment, and safety risk.
-- **Learning**: User asks why something works or failed. Output a principle card and link it back to usable dishes.
+- **Learning**: User asks why something works or failed. Start with a concise L1 answer, then progressively deepen to L2 (expanded) and L3 (full principle card) on user request. Offer to transition into Recipe Generation for hands-on verification. Record depth in Learning Log.
 - **Meal Planning**: User asks for a meal, multiple dishes, shopping list, or cooking schedule. Output a meal plan with menu, kitchen timeline, and equipment conflicts; elicit the shopping list mode before generating shopping-list details.
 - **Recipe Import**: User provides an external, pasted, or self-authored recipe. Rewrite it into this skill's recipe schema and keep the initial Review status as `draft`.
 - **Memory Init / Update**: User explicitly asks to initialize or update preferences, equipment, dislikes, household members, or historical feedback. Do not enter this flow just because no profile exists.
@@ -79,7 +79,7 @@ Do not turn the skill into a questionnaire. Ask only when the answer changes saf
 | Memory Init / Update | Confirmation before durable write; separate confirmation for sensitive data | Do not write; treat unclear values as session-only or candidate | Through `scripts/cooking_memory.py` only |
 | Recipe Import | Persistence target and source note when saving a draft; high-risk safety gaps | Rewrite for this chat only, review status `draft` | No durable user memory by default |
 | Meal Planning | Required only when servings or menu scope is impossible to infer | Infer menu source; use relative timeline; skip full shopping list until selected | No durable write by default |
-| Learning | Unsafe failure diagnosis without enough facts | Short explanation plus one practical link | No durable write by default |
+| Learning | Unsafe failure diagnosis without enough facts | L1 short answer with progressive disclosure to L2/L3; Learning Log records depth | Learning Log append-only via `scripts/cooking_memory.py`; no durable profile write |
 
 ## Interactive QA Mode
 
@@ -211,11 +211,30 @@ Recipe Import has two decisions: persistence target and output shape. Do not mer
 
 When the persistence target is missing and an interactive choice tool is available, ask:
 
-- **Rewrite for this chat only**: default; keep status `draft`.
-- **Save as draft recipe**: require a source note and keep status `draft`.
-- **Review an existing draft**: review against `templates/recipe-review-checklist.md`.
+- **Rewrite for this chat only**: default; keep status `draft`, do not save.
+- **Save as draft recipe**: save to `~/.rookie-cooking/drafts/`, require a source note, keep status `draft`.
+- **Review an existing draft**: scan `~/.rookie-cooking/drafts/` to list existing drafts, review against `templates/recipe-review-checklist.md`.
 
 The output shape follows Recipe Generation rules: Full explanation version by default, Kitchen execution version when requested, and PDF or direct print only after a kitchen execution version exists.
+
+### User Recipe Storage
+
+User-imported recipes live in `~/.rookie-cooking/`, separate from the skill's `recipes/` directory:
+
+- `~/.rookie-cooking/drafts/` — draft status recipes
+- `~/.rookie-cooking/recipes/` — passed / validated status recipes
+
+Agent discovers user recipes by scanning these directories directly (no index file).
+
+### State Transitions
+
+- `draft → passed`: Agent runs review checklist, user confirms, file moves from `drafts/` to `recipes/`.
+- `passed → validated`: User reports they cooked it and it worked. One-sentence confirmation is sufficient.
+- Frontmatter must include: `status`, `source`, `source_description`, `import_date`.
+
+### Conflict Detection
+
+Before importing, scan skill's `recipes/` and `~/.rookie-cooking/recipes/` for name conflicts. If a conflict is found, warn the user. When using recipes, prefer the user's version over the built-in one.
 
 ## Meal Planning Mode Inference
 
@@ -232,13 +251,49 @@ Ask for planning mode only when the mode cannot be inferred and the resulting pl
 
 Learning defaults to a concise answer. Do not ask a first-turn depth question unless the user explicitly asks for a specific output shape and that shape is ambiguous.
 
-The concise answer includes one sentence, key variables, beginner checks, one concrete application, and one practice dish link. After the answer, offer post-answer expansion choices when useful:
+### Progressive Disclosure
 
-- **Full principle card**
-- **Explain through one dish**
-- **Diagnose my failed result**
+Learning uses three depth levels. Always start at L1 and deepen only when the user asks. Each level ends with a subtle hook that signals more depth is available without blocking.
 
-If the user chooses diagnosis, transition to Troubleshooting and do not run Recipe Generation output selection.
+**L1 — Short Answer** (default on first turn):
+- One-sentence principle explanation.
+- Key variables that affect the outcome.
+- Beginner-friendly observable check.
+- One concrete application example.
+- End with a soft hook: "想展开说原理机制，或者用一道菜来验证，可以继续问。"
+
+**L2 — Expanded** (when the user asks to expand, go deeper, or "展开说"):
+- Mechanism explanation: how and why it works at a physical/chemical level.
+- Common mistakes and their corrections.
+- One linked recipe with a "verification point" — the step that demonstrates this principle.
+- Offer a hands-on verification entry: "想用 [菜名] 动手验证这个原理吗？" If confirmed, transition to Recipe Generation with the principle context carried forward. The generated recipe starts with a "本菜验证的原理" overview section before steps; recipe steps themselves are not annotated.
+- End with a hook: "还可以看完整原理卡片和关联原理。"
+
+**L3 — Full Principle Card** (when the user asks for the full card or goes even deeper):
+- Render using `templates/principle-card.md` with data from the relevant `principles/*.md` file.
+- Include related principles and counterintuitive cases.
+
+If the user asks "为什么" about a failure rather than a concept, offer diagnosis as an expansion option: transition to Troubleshooting and do not run Recipe Generation output selection.
+
+When no interactive choice tool is available, replace expansion buttons with plain-text prompts: "可以问我'展开说''用一道菜讲'或'诊断一下'。"
+
+### Learning Log Integration
+
+Before answering, query the Learning Log to check whether this principle was already explained and at what depth:
+
+```bash
+python scripts/cooking_memory.py query-learning --principle <principle-id>
+```
+
+If the log shows the user already received L2 or L3 for this principle, briefly note "之前聊过这个原理" and skip redundant content. Offer to jump to L3 or explore a different angle.
+
+After answering (L1 or deeper), record the interaction:
+
+```bash
+python scripts/cooking_memory.py append-learning --principle <principle-id> --level <L1|L2|L3>
+```
+
+No confirmation is needed for Learning Log writes; they are lightweight, non-sensitive, and only used to reduce repetition.
 
 ## Meal Planning Shopping List Elicitation
 
@@ -267,7 +322,7 @@ Read only the files needed for the user request:
 | `templates/recipe-review-checklist.md` | 菜谱质量审查 |
 | `templates/meal-plan.md` | 一餐规划输出 |
 | `templates/recipe-changelog.md` | 菜谱变更日志 |
-| `templates/imported-recipe-review.md` | 导入菜谱审查 |
+| `templates/imported-recipe-review.md` | 导入菜谱审查（会话内 checklist，不落盘） |
 
 ### References
 
@@ -306,7 +361,7 @@ For multi-dish meals, use `templates/meal-plan.md` and `references/meal-planning
 
 When recipe parameters, safety notes, status, kitchen execution steps, or feedback-driven adjustments change, append a changelog entry using `templates/recipe-changelog.md` and `references/recipe-versioning.md`. Pure typo or formatting fixes do not need a recipe changelog.
 
-For user-imported recipes, use `references/recipe-import-rules.md` and `templates/imported-recipe-review.md`. Imported recipes start as `draft`; only mark them `passed` after review against `templates/recipe-review-checklist.md`.
+For user-imported recipes, use `references/recipe-import-rules.md` and `templates/imported-recipe-review.md` (conversation-only checklist, not persisted). Imported recipes start as `draft` in `~/.rookie-cooking/drafts/`; mark them `passed` after review against `templates/recipe-review-checklist.md` and user confirmation, then move to `~/.rookie-cooking/recipes/`. See `references/recipe-import-rules.md` for full lifecycle.
 
 ## Generation Workflow
 
@@ -357,7 +412,7 @@ Distinguish temporary overrides from durable preferences:
 - First-run adaptation answers are session-only unless the user chooses Initialize long-term preferences.
 - Enter Memory Init / Update only when the user explicitly asks to initialize or change durable preferences.
 - Durable memory writes must go through `scripts/cooking_memory.py`; do not edit memory files directly from the prompt.
-- Durable user data lives outside this repository by default: `~/.rookie-cooking/profile.yaml`, `~/.rookie-cooking/feedback.jsonl`, and `~/.rookie-cooking/memory-candidates.jsonl`.
+- Durable user data lives outside this repository by default: `~/.rookie-cooking/profile.yaml`, `~/.rookie-cooking/feedback.jsonl`, `~/.rookie-cooking/memory-candidates.jsonl`, `~/.rookie-cooking/learning-log.jsonl`, `~/.rookie-cooking/drafts/` (draft recipes), and `~/.rookie-cooking/recipes/` (passed/validated recipes).
 - If the user names household members, merge only those members' relevant preferences.
 - For multiple diners, combine dislikes and safety constraints, then choose the least risky shared salt, oil, and spice level.
 - Recipe feedback may become a memory candidate, but automatic learning must ask for confirmation before changing durable preferences.

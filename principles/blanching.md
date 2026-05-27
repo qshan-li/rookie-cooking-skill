@@ -3,7 +3,9 @@
 - ID：`blanching`
 - 名称：焯水
 - 一句话解释：焯水用短时间热水处理食材，可以去血沫、定色、预熟或降低异味，但会带走部分味道和水溶性成分。
-- 适用菜谱：`hongshaorou`、`stir-fried-greens`
+- 适用菜谱：
+  - `hongshaorou` → `recipes/meat/hong-shao-rou.md` — 验证点：冷水下锅焯出血沫，水面浮沫变灰褐色后捞出
+  - `stir-fried-greens` → `recipes/vegetable/qing-chao-xiao-qing-cai.md` — 验证点：沸水加盐和油焯 15 秒，颜色变深绿立即捞出
 - 来源：The Culinary Institute of America, The Professional Chef；中式家常烹饪技法。
 
 ## 原理描述

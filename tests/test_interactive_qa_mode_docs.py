@@ -184,6 +184,10 @@ class InteractiveQAModeDocsTest(unittest.TestCase):
         self.assertIn("## Meal Planning Mode Inference", skill)
         self.assertIn("先推断", meal_rules)
         self.assertIn("## Learning Default And Expansion", skill)
+        self.assertIn("Progressive Disclosure", skill)
+        self.assertIn("Learning Log Integration", skill)
+        self.assertIn("append-learning", skill)
+        self.assertIn("query-learning", skill)
         self.assertIn("默认先短答", principle_template)
 
 

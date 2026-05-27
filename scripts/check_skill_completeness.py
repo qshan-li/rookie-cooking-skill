@@ -103,6 +103,7 @@ class CheckResult:
 
 
 def recipe_paths(root: Path) -> list[Path]:
+    """Scan only the skill's recipes/ directory. User data in ~/.rookie-cooking/ is excluded."""
     recipes_root = root / "recipes"
     return sorted(recipes_root.glob("*/*.md"))
 

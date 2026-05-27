@@ -3,7 +3,8 @@
 - ID：`velveting`
 - 名称：上浆和滑炒
 - 一句话解释：肉丝用盐、液体、淀粉和油形成薄保护层，再短时间高温滑熟，可以减少失水和变柴。
-- 适用菜谱：`qingjiao-rousi`
+- 适用菜谱：
+  - `qingjiao-rousi` → `recipes/meat/qing-jiao-rou-si.md` — 验证点：肉丝上浆后滑炒，切开内部仍湿润不柴
 - 来源：The Culinary Institute of America, The Professional Chef；中式家常烹饪技法。
 
 ## 原理描述

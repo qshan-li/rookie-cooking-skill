@@ -3,7 +3,10 @@
 - ID：`salt-water-migration`
 - 名称：盐和水分迁移
 - 一句话解释：盐会改变食材内外水分移动，放得太早可能出水，放得合适能入味和保水。
-- 适用菜谱：`stir-fried-greens`、`qingjiao-rousi`、`tomato-egg`
+- 适用菜谱：
+  - `stir-fried-greens` → `recipes/vegetable/qing-chao-xiao-qing-cai.md` — 验证点：盐最后放，出锅前才不会大量出水
+  - `qingjiao-rousi` → `recipes/meat/qing-jiao-rou-si.md` — 验证点：肉丝上浆时盐量控制，过多会让蛋白质提前出水
+  - `tomato-egg` → `recipes/vegetable/fan-qie-chao-dan.md` — 验证点：番茄先炒出汁再调味，盐加速出水有助于成汁
 - 来源：Harold McGee, On Food and Cooking；食品化学教材；基础烹饪科学。
 
 ## 原理描述

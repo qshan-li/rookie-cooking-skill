@@ -28,6 +28,8 @@ python scripts/cooking_memory.py reject-candidate <candidate_id>
 python scripts/cooking_memory.py view
 python scripts/cooking_memory.py delete <path-or-id>
 python scripts/cooking_memory.py ignore-once --dish tomato-egg
+python scripts/cooking_memory.py append-learning --principle maillard --level L1
+python scripts/cooking_memory.py query-learning --principle maillard
 ```
 
 Skill 不应在 prompt 中直接散写 YAML 或 JSONL 文件。

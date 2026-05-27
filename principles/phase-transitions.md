@@ -3,7 +3,10 @@
 - ID：`phase-transitions`
 - 名称：相变
 - 一句话解释：物质从一种状态变为另一种状态（如固态变液态、液态变气态），理解相变能帮助掌握烹饪中的温度控制。
-- 适用菜谱：`hongshaorou`、`steamed-egg`、甜品制作
+- 适用菜谱：
+  - `hongshaorou` → `recipes/meat/hong-shao-rou.md` — 验证点：水从液态变为蒸汽带走热量，大火收汁时观察沸腾强度
+  - `steamed-egg` → `recipes/soup/zheng-dan-geng.md` — 验证点：蛋液从液态变为固态，温度超过 85°C 出现蜂窝状气孔
+  - 甜品制作 — 通用场景，糖的结晶和融化是典型的固液相变
 - 来源：Harvard Science & Cooking课程；Modernist Cuisine；基础物理化学原理。
 
 ## 原理描述

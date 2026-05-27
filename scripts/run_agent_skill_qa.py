@@ -259,6 +259,12 @@ def has_learning_expansion(text: str) -> bool:
             "完整原理卡",
             "结合一道菜",
             "诊断",
+            "展开说",
+            "用一道菜",
+            "验证这个原理",
+            "动手验证",
+            "想展开",
+            "还可以看",
         ),
     )
 
@@ -349,8 +355,8 @@ def evaluate_output(test_case: TestCase, text: str) -> Evaluation:
         if "输出模式" in text:
             return Evaluation("fail", "learning incorrectly triggered output-mode QA")
         if has_any(text, ("一句话解释", "短答", "原理", "水分", "锅温")) and has_learning_expansion(text):
-            return Evaluation("pass", "learning short answer produced with expansion choices")
-        return Evaluation("fail", "missing learning short answer or expansion choices")
+            return Evaluation("pass", "learning short answer produced with progressive disclosure or expansion choices")
+        return Evaluation("fail", "missing learning short answer or progressive disclosure hook")
 
     if test_case.case_id == "G":
         if "输出模式" in text:

@@ -3,7 +3,10 @@
 - ID：`viscosity`
 - 名称：粘度
 - 一句话解释：液体流动的阻力，影响酱汁的挂壁能力、面糊的稠度和口感的顺滑度。
-- 适用菜谱：`hongshaorou`、`stir-fried-greens`、甜品制作
+- 适用菜谱：
+  - `hongshaorou` → `recipes/meat/hong-shao-rou.md` — 验证点：收汁后酱汁粘度升高，勺子划过能见锅底
+  - `stir-fried-greens` → `recipes/vegetable/qing-chao-xiao-qing-cai.md` — 验证点：出锅前薄芡让菜汁粘度适中，能挂在菜叶上
+  - 甜品制作 — 通用场景，淀粉糊化和糖浆浓缩都会改变粘度
 - 来源：Harvard Science & Cooking课程；食品化学教材；基础流体力学。
 
 ## 原理描述

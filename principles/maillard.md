@@ -3,7 +3,9 @@
 - ID：`maillard`
 - 名称：美拉德反应
 - 一句话解释：食材表面足够热且不太湿时，蛋白质和糖会产生褐色香味。
-- 适用菜谱：`hongshaorou`、`qingjiao-rousi`
+- 适用菜谱：
+  - `hongshaorou` → `recipes/meat/hong-shao-rou.md` — 验证点：煸肉边缘微黄后再加液体，比直接炖更香
+  - `qingjiao-rousi` → `recipes/meat/qing-jiao-rou-si.md` — 验证点：肉丝分批下锅保持锅温，表面焦香而非水煮
 - 来源：Harold McGee, On Food and Cooking；Modernist Cuisine；基础烹饪科学。
 
 ## 原理描述

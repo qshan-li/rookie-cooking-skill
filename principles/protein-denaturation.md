@@ -3,7 +3,10 @@
 - ID：`protein-denaturation`
 - 名称：蛋白质变性
 - 一句话解释：蛋白质受热、受盐或受酸后会改变结构，刚好凝固是嫩，过度收缩就是老和柴。
-- 适用菜谱：`qingjiao-rousi`、`steamed-egg`、`hongshaorou`
+- 适用菜谱：
+  - `qingjiao-rousi` → `recipes/meat/qing-jiao-rou-si.md` — 验证点：肉丝上浆后低温滑炒，蛋白质刚好凝固保持嫩度
+  - `steamed-egg` → `recipes/soup/zheng-dan-geng.md` — 验证点：蛋液蛋白质在 70-75°C 凝固，火太大出现蜂窝就是过度变性
+  - `hongshaorou` → `recipes/meat/hong-shao-rou.md` — 验证点：长时间炖煮让胶原蛋白变性为明胶，肉变软烂
 - 来源：Harold McGee, On Food and Cooking；Modernist Cuisine；食品化学教材；食品安全温度另见 `food-safety-temperature`。
 
 ## 原理描述

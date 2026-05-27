@@ -178,6 +178,36 @@ class AgentSkillQATest(unittest.TestCase):
 
         self.assertEqual("pass", result.status)
 
+    def test_learning_case_accepts_progressive_disclosure_hook(self):
+        module = load_module()
+
+        result = module.evaluate_output(
+            module.TEST_CASES["F"],
+            "一句话解释：青菜细胞壁在高温下破裂，水分被释放出来。\n关键变量：锅温、盐的时机、批量。\n新手判断：下锅后锅底出水说明锅温不够或盐放太早。\n想展开说原理机制，或者用一道菜来验证，可以继续问。",
+        )
+
+        self.assertEqual("pass", result.status)
+
+    def test_learning_case_accepts_recipe_verification_entry(self):
+        module = load_module()
+
+        result = module.evaluate_output(
+            module.TEST_CASES["F"],
+            "一句话解释：盐会改变食材内外水分移动。\n关键变量：盐量、时机。\n想用清炒小青菜动手验证这个原理吗？",
+        )
+
+        self.assertEqual("pass", result.status)
+
+    def test_learning_case_rejects_output_mode_qa(self):
+        module = load_module()
+
+        result = module.evaluate_output(
+            module.TEST_CASES["F"],
+            "请选择输出模式：默认、厨房执行版。\n一句话解释：锅温低会让水分来不及蒸发。",
+        )
+
+        self.assertEqual("fail", result.status)
+
     def test_meal_planning_accepts_schedule_with_shopping_mode_choice(self):
         module = load_module()
 
