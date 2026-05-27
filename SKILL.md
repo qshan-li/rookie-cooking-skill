@@ -128,6 +128,7 @@ Every generated recipe must include:
 7. Related principles from `principles/`.
 8. A kitchen execution version that is short enough to scan while cooking only when the user explicitly chooses Kitchen execution output, Generate PDF, Direct print, Output kitchen execution text, or a persisted recipe-file workflow.
 9. An applied preferences or assumptions section listing servings, equipment, taste, household members if specified, and historical feedback if used.
+10. After Recipe Generation completes, trigger Post-Generation Delivery Flow using an interactive choice tool (e.g., AskUserQuestion). Do not use plain text questions. This is an explicit checkpoint to prevent missing delivery selection.
 
 Default output chat body must contain only the full explanation version. Do not include a `## 厨房执行版` section, kitchen print-card body, or kitchen-only checklist in the default chat body. If the user later chooses Generate PDF or Direct print, derive the kitchen execution artifact only after the user chooses Generate PDF or Direct print.
 
