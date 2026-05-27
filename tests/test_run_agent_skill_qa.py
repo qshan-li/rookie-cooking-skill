@@ -1,8 +1,10 @@
 import importlib.util
+import io
 from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 
 MODULE_PATH = Path(__file__).resolve().parents[1] / "scripts" / "run_agent_skill_qa.py"
@@ -27,7 +29,7 @@ class AgentSkillQATest(unittest.TestCase):
             home = Path(tmp) / "home"
             root.mkdir()
             home.mkdir()
-            (root / "SKILL.md").write_text("---\nname: rookie-cooking-skill\n---\n", encoding="utf-8")
+            (root / "SKILL.md").write_text("---\nname: rookie-cooking\n---\n", encoding="utf-8")
 
             checks = module.local_install_checks(root, home)
 
@@ -40,10 +42,10 @@ class AgentSkillQATest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "repo"
             home = Path(tmp) / "home"
-            skill_dir = root / ".claude" / "skills" / "rookie-cooking-skill"
+            skill_dir = root / ".claude" / "skills" / module.SKILL_NAME
             skill_dir.mkdir(parents=True)
             home.mkdir()
-            (skill_dir / "SKILL.md").write_text("---\nname: rookie-cooking-skill\n---\n", encoding="utf-8")
+            (skill_dir / "SKILL.md").write_text("---\nname: rookie-cooking\n---\n", encoding="utf-8")
 
             checks = module.local_install_checks(root, home)
 
@@ -106,10 +108,25 @@ class AgentSkillQATest(unittest.TestCase):
 
         result = module.evaluate_output(
             module.TEST_CASES["A"],
-            "未指定输出模式，默认生成。\n## 完整解释版\n...\n## 厨房执行版\n...",
+            "未指定输出模式，默认生成。\n## 完整解释版\n...\n## 备料\n...\n## 做法\n| 出错怎么办 |",
         )
 
         self.assertEqual("fail", result.status)
+
+    def test_default_recipe_generation_allows_fast_texture_word_and_kitchen_pdf_delivery_wording(self):
+        module = load_module()
+
+        result = module.evaluate_output(
+            module.TEST_CASES["A"],
+            (
+                "未指定输出模式，默认生成。本次使用默认适配继续。\n"
+                "## 完整解释版\n"
+                "热油能让蛋液快速蓬松。\n"
+                "请选择后续交付方式：生成厨房执行版 PDF、直接打印、暂不需要。"
+            ),
+        )
+
+        self.assertEqual("pass", result.status)
 
     def test_kitchen_only_case_rejects_full_explanation_output(self):
         module = load_module()
@@ -126,7 +143,7 @@ class AgentSkillQATest(unittest.TestCase):
 
         result = module.evaluate_output(
             module.TEST_CASES["B"],
-            "## 厨房执行版\n安全提示\n失败信号\n请选择后续交付方式：生成 PDF、直接打印、暂不需要。",
+            "# 番茄炒蛋\n## 备料\n- 鸡蛋\n## 做法\n| 出错怎么办 |\n## 安全 / 补救\n请选择后续交付方式：生成 PDF、直接打印、暂不需要。",
         )
 
         self.assertEqual("pass", result.status)
@@ -161,6 +178,46 @@ class AgentSkillQATest(unittest.TestCase):
 
         self.assertEqual("pass", result.status)
 
+    def test_meal_planning_accepts_schedule_with_shopping_mode_choice(self):
+        module = load_module()
+
+        result = module.evaluate_output(
+            module.TEST_CASES["G"],
+            "## 菜单\n两菜一汤\n## 厨房排程\nT-30 开始。\n## 设备冲突\n无。\n请选择购物清单模式：完整购物清单、缺货检查清单、跳过购物清单。",
+        )
+
+        self.assertEqual("pass", result.status)
+
+    def test_meal_planning_rejects_full_shopping_list_without_mode_choice(self):
+        module = load_module()
+
+        result = module.evaluate_output(
+            module.TEST_CASES["G"],
+            "## 菜单\n两菜一汤\n## 厨房排程\nT-30 开始。\n## 购物清单\n### 主料\n| 食材 | 总量 |",
+        )
+
+        self.assertEqual("fail", result.status)
+
+    def test_recipe_import_requires_persistence_and_output_shape_split(self):
+        module = load_module()
+
+        result = module.evaluate_output(
+            module.TEST_CASES["H"],
+            "导入意图：本次对话改写\n持久化目标：不保存\n输出形态：完整解释版\n导入状态：draft",
+        )
+
+        self.assertEqual("pass", result.status)
+
+    def test_recipe_import_rejects_missing_intent_split(self):
+        module = load_module()
+
+        result = module.evaluate_output(
+            module.TEST_CASES["H"],
+            "导入状态：draft\n## 完整解释版",
+        )
+
+        self.assertEqual("fail", result.status)
+
     def test_memory_init_case_requires_write_preview(self):
         module = load_module()
 
@@ -170,6 +227,55 @@ class AgentSkillQATest(unittest.TestCase):
         )
 
         self.assertEqual("pass", result.status)
+
+    def test_acp_evaluation_ignores_tool_output_before_final_answer(self):
+        module = load_module()
+
+        transcript = (
+            "[tool] Read templates/recipe-kitchen.md (completed)\n"
+            "output:\n"
+            "  # {{dish_name}}\n"
+            "  默认 Recipe Generation 使用完整解释版。快速和精准不再作为选项。\n"
+            "[thinking] Now answer.\n"
+            "已找到你的个人资料，直接输出厨房执行版。\n"
+            "\n"
+            "# 番茄炒蛋\n"
+            "\n"
+            "## 备料\n"
+            "- 鸡蛋 2 个。\n"
+            "\n"
+            "## 做法\n"
+            "| 顺序 | 火力/时间 | 做什么 | 看到什么就下一步 | 出错怎么办 |\n"
+            "| 1 | 中火 1 分钟 | 炒蛋 | 凝固 | 发硬就提前盛出 |\n"
+            "\n"
+            "## 安全 / 补救\n"
+            "- 鸡蛋完全凝固。\n"
+            "\n"
+            "请选择后续交付方式：生成 PDF、直接打印、暂不需要。\n"
+            "\n"
+            "[done] end_turn\n"
+        )
+
+        result = module.evaluate_output(module.TEST_CASES["B"], transcript)
+
+        self.assertEqual("pass", result.status)
+
+    def test_plan_output_lists_full_flow_case_matrix(self):
+        module = load_module()
+
+        buffer = io.StringIO()
+        with patch("sys.stdout", buffer):
+            exit_code = module.print_plan(Path("/repo"), Path("/home/test"), Path("/tmp/out"))
+
+        output = buffer.getvalue()
+        self.assertEqual(0, exit_code)
+        self.assertIn("## Test cases", output)
+        self.assertIn("A | Recipe Generation", output)
+        self.assertIn("E | Troubleshooting", output)
+        self.assertIn("F | Learning", output)
+        self.assertIn("G | Meal Planning", output)
+        self.assertIn("H | Recipe Import", output)
+        self.assertIn("I | Memory Init / Update", output)
 
     def test_gemini_headless_command_uses_prompt_flag(self):
         module = load_module()

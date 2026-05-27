@@ -48,6 +48,24 @@ class InteractiveQAModeDocsTest(unittest.TestCase):
         self.assertIn("profile 不存在且交互选择工具可用时，生成前必须提供一次可选的本次适配入口", memory)
         self.assertIn("默认选项必须是继续使用默认值", memory)
 
+    def test_recipe_output_mode_is_never_persisted_in_memory(self):
+        skill = (ROOT / "SKILL.md").read_text(encoding="utf-8")
+        memory = (ROOT / "references" / "cooking-memory-layer.md").read_text(encoding="utf-8")
+        profile_example = (ROOT / "references" / "user-profile.example.yaml").read_text(encoding="utf-8")
+
+        self.assertIn("Recipe output mode is not a durable preference", skill)
+        self.assertIn("even when a profile exists", skill)
+        self.assertIn("输出模式不是长期记忆字段", memory)
+        self.assertNotIn("preferred_output", memory)
+        self.assertNotIn("preferred_output", profile_example)
+
+    def test_default_output_must_not_embed_kitchen_execution_body(self):
+        skill = (ROOT / "SKILL.md").read_text(encoding="utf-8")
+
+        self.assertIn("Default output chat body must contain only the full explanation version", skill)
+        self.assertIn("Do not include a `## 厨房执行版` section", skill)
+        self.assertIn("only after the user chooses Generate PDF or Direct print", skill)
+
     def test_post_generation_delivery_uses_choices_and_temp_artifacts(self):
         skill = (ROOT / "SKILL.md").read_text(encoding="utf-8")
 
@@ -66,8 +84,8 @@ class InteractiveQAModeDocsTest(unittest.TestCase):
         skill = (ROOT / "SKILL.md").read_text(encoding="utf-8")
         full_template = (ROOT / "templates" / "recipe-full.md").read_text(encoding="utf-8")
 
-        self.assertIn("For Default output, use `templates/recipe-full.md` only", skill)
-        self.assertIn("Do not load `templates/recipe-kitchen.md` for Default output", skill)
+        self.assertIn("Default output 专用，不加载 kitchen 版", skill)
+        self.assertIn("仅在选择 Kitchen output / PDF / 打印时加载", skill)
         self.assertNotIn("## 厨房执行版", full_template)
 
     def test_troubleshooting_reads_memory_without_silent_long_term_writes(self):
@@ -110,7 +128,7 @@ class InteractiveQAModeDocsTest(unittest.TestCase):
         self.assertIn("QA 模式", readme)
         self.assertIn("不阻塞生成", readme)
         self.assertIn("默认：完整解释版", readme)
-        self.assertIn("厨房执行版：可扫读步骤", readme)
+        self.assertIn("厨房执行版：一页打印卡", readme)
         self.assertNotIn("快速：", readme)
         self.assertNotIn("精准：", readme)
         self.assertIn("PDF 或直接打印", readme)

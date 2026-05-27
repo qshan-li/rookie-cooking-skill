@@ -27,7 +27,7 @@ class SyncSkillInstallTest(unittest.TestCase):
             home = Path(tmp) / "home"
             root.mkdir()
             home.mkdir()
-            (root / "SKILL.md").write_text("---\nname: rookie-cooking-skill\n---\n", encoding="utf-8")
+            (root / "SKILL.md").write_text("---\nname: rookie-cooking\n---\n", encoding="utf-8")
             (root / "scripts").mkdir()
             (root / "scripts" / "tool.py").write_text("print('ok')\n", encoding="utf-8")
             (root / ".git").mkdir()
@@ -39,7 +39,7 @@ class SyncSkillInstallTest(unittest.TestCase):
 
             result = module.sync_skill(root, home, include_agent_links=False)
 
-            install = home / ".local" / "share" / "agent-skills" / "rookie-cooking-skill"
+            install = home / ".local" / "share" / "agent-skills" / module.SKILL_NAME
             self.assertIn(install, result.synced_paths)
             self.assertTrue((install / "SKILL.md").exists())
             self.assertTrue((install / "scripts" / "tool.py").exists())
@@ -55,7 +55,7 @@ class SyncSkillInstallTest(unittest.TestCase):
             home = root / "fake-home"
             root.mkdir()
             home.mkdir()
-            (root / "SKILL.md").write_text("---\nname: rookie-cooking-skill\n---\n", encoding="utf-8")
+            (root / "SKILL.md").write_text("---\nname: rookie-cooking\n---\n", encoding="utf-8")
 
             with self.assertRaises(ValueError):
                 module.sync_skill(root, home, include_agent_links=False)
@@ -68,12 +68,12 @@ class SyncSkillInstallTest(unittest.TestCase):
             home = Path(tmp) / "home"
             root.mkdir()
             home.mkdir()
-            (root / "SKILL.md").write_text("---\nname: rookie-cooking-skill\n---\n", encoding="utf-8")
+            (root / "SKILL.md").write_text("---\nname: rookie-cooking\n---\n", encoding="utf-8")
 
             result = module.sync_skill(root, home, include_agent_links=True)
 
-            central = home / ".local" / "share" / "agent-skills" / "rookie-cooking-skill"
-            link = home / ".codex" / "skills" / "rookie-cooking-skill"
+            central = home / ".local" / "share" / "agent-skills" / module.SKILL_NAME
+            link = home / ".codex" / "skills" / module.SKILL_NAME
             self.assertIn(link, result.linked_paths)
             self.assertTrue(link.is_symlink())
             self.assertEqual(central, link.resolve())

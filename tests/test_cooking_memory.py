@@ -47,8 +47,10 @@ class CookingMemoryTest(unittest.TestCase):
             memory.init_profile(root)
 
             result = memory.read_memory(root, dish="tomato-egg", diners=["self"])
+            profile = memory.read_profile(root)
 
         self.assertTrue(result["memory_found"])
+        self.assertNotIn("preferred_output", profile["defaults"])
         self.assertEqual(2, result["applied"]["servings"]["value"])
         self.assertFalse(result["applied"]["equipment"]["has_thermometer"]["value"])
         self.assertEqual("mild", result["applied"]["taste"]["spice_level"]["value"])

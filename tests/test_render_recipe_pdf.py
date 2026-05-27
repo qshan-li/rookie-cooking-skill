@@ -194,6 +194,65 @@ class RenderRecipePdfTest(unittest.TestCase):
             self.assertIn("<li>收汁 2 分钟。</li>", html)
             self.assertFalse(kitchen_path.exists())
 
+    def test_temporary_kitchen_markdown_extracts_kitchen_section_from_full_recipe(self):
+        module = load_module()
+
+        with TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            kitchen_path = tmp_path / "fan-qie-chao-dan.md"
+            css_path = tmp_path / "print.css"
+            output_dir = tmp_path / "output"
+            html_dir = tmp_path / "html"
+            kitchen_path.write_text(
+                (
+                    "# 番茄炒蛋\n\n"
+                    "## 完整解释版\n\n"
+                    "完整解释正文。\n\n"
+                    "## 厨房执行版\n\n"
+                    "- 开火。\n\n"
+                    "### Review\n\n"
+                    "- 状态：`draft`\n"
+                ),
+                encoding="utf-8",
+            )
+            css_path.write_text("", encoding="utf-8")
+
+            argv = [
+                "render_recipe_pdf.py",
+                "--kitchen-markdown",
+                str(kitchen_path),
+                "--title",
+                "番茄炒蛋",
+                "--output-dir",
+                str(output_dir),
+                "--tmp-dir",
+                str(html_dir),
+                "--css",
+                str(css_path),
+            ]
+            with (
+                patch.object(sys, "argv", argv),
+                patch.object(module, "find_chrome", return_value="chrome"),
+                patch.object(module, "render_pdf"),
+                patch("builtins.print"),
+            ):
+                module.main()
+
+            html = (html_dir / "fan-qie-chao-dan.html").read_text(encoding="utf-8")
+            self.assertIn("<h1>番茄炒蛋</h1>", html)
+            self.assertIn("<li>开火。</li>", html)
+            self.assertNotIn("完整解释正文", html)
+            self.assertNotIn("Review", html)
+
+    def test_temporary_kitchen_markdown_strips_embedded_title(self):
+        module = load_module()
+
+        html = module.build_html("# 番茄炒蛋 厨房执行版\n\n- 开火。", "", "番茄炒蛋")
+
+        self.assertIn("<h1>番茄炒蛋</h1>", html)
+        self.assertNotIn("<h1>番茄炒蛋 厨房执行版</h1>", html)
+        self.assertIn("<li>开火。</li>", html)
+
     def test_main_avoids_duplicate_kitchen_suffix_for_temporary_markdown_pdf(self):
         module = load_module()
 
@@ -231,6 +290,47 @@ class RenderRecipePdfTest(unittest.TestCase):
                 output_dir.resolve() / "hao-you-sheng-cai-kitchen.pdf",
                 render_pdf.call_args.args[2],
             )
+
+    def test_temporary_kitchen_markdown_can_use_recipe_slug_for_pdf_name(self):
+        module = load_module()
+
+        with TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            kitchen_path = tmp_path / "print-job.md"
+            css_path = tmp_path / "print.css"
+            output_dir = tmp_path / "output"
+            html_dir = tmp_path / "html"
+            kitchen_path.write_text("## 厨房执行版\n\n- 炒饭。", encoding="utf-8")
+            css_path.write_text("", encoding="utf-8")
+
+            argv = [
+                "render_recipe_pdf.py",
+                "--kitchen-markdown",
+                str(kitchen_path),
+                "--title",
+                "卤牛肉炒饭",
+                "--output-stem",
+                "lu-niu-rou-chao-fan",
+                "--output-dir",
+                str(output_dir),
+                "--tmp-dir",
+                str(html_dir),
+                "--css",
+                str(css_path),
+            ]
+            with (
+                patch.object(sys, "argv", argv),
+                patch.object(module, "find_chrome", return_value="chrome"),
+                patch.object(module, "render_pdf") as render_pdf,
+                patch("builtins.print"),
+            ):
+                module.main()
+
+            self.assertEqual(
+                output_dir.resolve() / "lu-niu-rou-chao-fan-kitchen.pdf",
+                render_pdf.call_args.args[2],
+            )
+            self.assertTrue((html_dir / "lu-niu-rou-chao-fan.html").exists())
 
     def test_main_keeps_recipe_file_when_rendering_repository_recipe(self):
         module = load_module()
