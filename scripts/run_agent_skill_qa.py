@@ -7,12 +7,14 @@ import argparse
 from dataclasses import asdict, dataclass
 import json
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import sys
 
 
 SKILL_NAME = "rookie-cooking"
+DEFAULT_KITCHEN_HTML_DIR = Path.home() / ".rookie-cooking" / "tmp" / "pdfs"
 
 
 @dataclass(frozen=True)
@@ -157,6 +159,12 @@ def has_any(text: str, snippets: tuple[str, ...]) -> bool:
     return any(snippet in text for snippet in snippets)
 
 
+def normalized_markup_text(text: str) -> str:
+    without_tags = re.sub(r"<[^>]+>", "\n", text)
+    without_markdown = without_tags.replace("|", " ")
+    return re.sub(r"\s+", " ", without_markdown).strip()
+
+
 def final_answer_text(text: str) -> str:
     lines = text.splitlines()
     answer_start = 0
@@ -220,11 +228,17 @@ def has_kitchen_section_heading(text: str) -> bool:
 
 
 def has_kitchen_print_card_body(text: str) -> bool:
-    return has_all(text, ("## 备料", "## 做法")) and has_any(text, ("出错怎么办", "## 安全 / 补救"))
+    normalized = normalized_markup_text(text)
+    has_prep = "备料" in normalized
+    has_action_table = has_all(normalized, ("火力/时间", "做什么", "看到什么就下一步", "出错怎么办"))
+    has_safety_recovery = "安全 / 补救" in text or (
+        "安全" in normalized and "补救" in normalized
+    )
+    return has_prep and has_action_table and has_safety_recovery
 
 
 def has_kitchen_execution_output(text: str) -> bool:
-    return "厨房执行版" in text or has_kitchen_print_card_body(text)
+    return has_kitchen_print_card_body(text)
 
 
 def has_kitchen_critical_checks(text: str) -> bool:
@@ -332,7 +346,7 @@ def evaluate_output(test_case: TestCase, text: str) -> Evaluation:
             return Evaluation("fail", "kitchen-only request included full explanation")
         if has_kitchen_execution_output(text) and has_kitchen_critical_checks(text) and has_delivery_choice(text):
             return Evaluation("pass", "kitchen-only output retained critical checks")
-        return Evaluation("fail", "missing kitchen execution output or delivery choice")
+        return Evaluation("fail", "missing kitchen print-card table, critical checks, or delivery choice")
 
     if test_case.case_id == "C":
         if "完整解释版" in text and has_delivery_choice(text):
@@ -344,7 +358,7 @@ def evaluate_output(test_case: TestCase, text: str) -> Evaluation:
             return Evaluation("fail", "kitchen execution request included full explanation")
         if has_kitchen_execution_output(text) and has_delivery_choice(text):
             return Evaluation("pass", "explicit kitchen execution output produced with delivery choice")
-        return Evaluation("fail", "explicit kitchen execution output missing kitchen version or delivery choice")
+        return Evaluation("fail", "explicit kitchen execution output missing kitchen print-card table or delivery choice")
 
     if test_case.case_id == "E":
         if "输出模式" in text:
@@ -389,6 +403,36 @@ def evaluate_output(test_case: TestCase, text: str) -> Evaluation:
         return Evaluation("fail", "missing memory write preview")
 
     raise ValueError(f"Unknown test case: {test_case.case_id}")
+
+
+def kitchen_html_candidates(pdf_path: Path, html_dir: Path) -> tuple[Path, ...]:
+    stem = pdf_path.stem
+    candidates = [html_dir / f"{stem}.html"]
+    if stem.endswith("-kitchen"):
+        candidates.append(html_dir / f"{stem.removesuffix('-kitchen')}.html")
+    return tuple(candidates)
+
+
+def kitchen_artifact_text_path(path: Path, html_dir: Path) -> Path:
+    if path.suffix.lower() != ".pdf":
+        return path
+    for candidate in kitchen_html_candidates(path, html_dir):
+        if candidate.exists():
+            return candidate
+    candidate_list = ", ".join(str(candidate) for candidate in kitchen_html_candidates(path, html_dir))
+    raise FileNotFoundError(f"PDF validation requires rendered HTML beside the print job. Tried: {candidate_list}")
+
+
+def validate_kitchen_artifact(path: Path, html_dir: Path = DEFAULT_KITCHEN_HTML_DIR) -> Evaluation:
+    try:
+        text_path = kitchen_artifact_text_path(path, html_dir)
+        text = text_path.read_text(encoding="utf-8")
+    except OSError as error:
+        return Evaluation("fail", str(error))
+
+    if has_kitchen_print_card_body(text):
+        return Evaluation("pass", "kitchen print-card table structure found")
+    return Evaluation("fail", "missing kitchen print-card table structure")
 
 
 def build_headless_command(agent: str, prompt: str, root: Path, output_path: Path) -> list[str]:
@@ -593,6 +637,16 @@ def run_acp_check(agents: list[str], timeout_seconds: int, execute: bool) -> int
     return exit_code
 
 
+def validate_kitchen_artifacts(paths: list[Path], html_dir: Path) -> int:
+    exit_code = 0
+    for path in paths:
+        evaluation = validate_kitchen_artifact(path, html_dir)
+        print(f"{path}: {evaluation.status} - {evaluation.reason}")
+        if evaluation.status == "fail":
+            exit_code = 1
+    return exit_code
+
+
 def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path.cwd(), help="Repository root")
@@ -618,6 +672,18 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     acp_parser.add_argument("--execute", action="store_true", help="Execute ACP check commands")
     acp_parser.add_argument("--timeout", type=int, default=30, help="Per-command timeout in seconds")
 
+    artifact_parser = subparsers.add_parser(
+        "validate-kitchen-artifact",
+        help="Validate generated kitchen Markdown/HTML/PDF against the print-card structure.",
+    )
+    artifact_parser.add_argument("path", type=Path, nargs="+", help="Markdown, HTML, text, or generated PDF path")
+    artifact_parser.add_argument(
+        "--html-dir",
+        type=Path,
+        default=DEFAULT_KITCHEN_HTML_DIR,
+        help="Directory containing intermediate HTML files for PDF validation.",
+    )
+
     return parser.parse_args(argv)
 
 
@@ -642,6 +708,8 @@ def main(argv: list[str]) -> int:
     if args.command == "acp-check":
         agents = args.agent or list(AGENTS)
         return run_acp_check(agents, args.timeout, args.execute)
+    if args.command == "validate-kitchen-artifact":
+        return validate_kitchen_artifacts(args.path, args.html_dir)
 
     raise ValueError(f"Unknown command: {args.command}")
 

@@ -20,6 +20,14 @@ def load_module():
 
 
 class RenderRecipePdfTest(unittest.TestCase):
+    def test_print_css_keeps_headings_with_following_content(self):
+        css = (Path(__file__).resolve().parents[1] / "assets" / "print.css").read_text(encoding="utf-8")
+
+        self.assertIn("break-after: avoid", css)
+        self.assertIn("page-break-after: avoid", css)
+        self.assertIn("h1 + p", css)
+        self.assertIn("h2 + table", css)
+
     def test_build_html_adds_recipe_title_to_printable_body(self):
         module = load_module()
 

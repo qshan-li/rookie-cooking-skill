@@ -49,7 +49,7 @@ Use $rookie-cooking 把红烧肉改成 4 人份，并给我可打印厨房版。
 | 厨房执行版 | 一页打印卡，保留备料、火力/时间、目标状态和出错补救 |
 | PDF / 打印 | 厨房执行版渲染为 PDF 或调用系统打印机 |
 
-默认：完整解释版；生成完成后询问是否需要 PDF 或直接打印。厨房执行版：一页打印卡，适合打印或放在手机上边做边看。在支持交互选择的 agent 终端（Claude Code、Codex、OpenClaw、Hermes Agent）中，如果用户没有指定输出模式，Skill 会进入 QA 模式让用户先选择。若当前 agent 没有选项选择工具，则不阻塞生成，直接使用默认输出模式并简要说明假设。
+默认：完整解释版；生成完成后询问是否需要 PDF 或直接打印。厨房执行版：一页打印卡，适合打印或放在手机上边做边看。在支持交互选择的 agent 终端中，如果用户没有指定输出模式，Skill 会进入 QA 模式让用户先选择。Codex 需要当前会话实际暴露 `request_user_input` 等结构化输入工具；Codex Default mode 通常只加载 skill，不提供该工具，因此会按默认输出模式继续生成。若当前 agent 没有选项选择工具，则不阻塞生成，直接使用默认输出模式并简要说明假设。
 
 ## Use Scenarios
 
@@ -67,7 +67,7 @@ Use $rookie-cooking 把红烧肉改成 4 人份，并给我可打印厨房版。
 | Platform | Status | Notes |
 |----------|--------|-------|
 | Claude Code | Supported | 原生 skill workflow，全量 QA 通过 |
-| Codex | Supported | 完整 QA 支持 |
+| Codex | Supported | skill 加载可用；交互 QA 取决于当前会话是否暴露 `request_user_input` |
 | Gemini CLI | Supported | 已验证 |
 | Hermes Agent | Supported | 交互选择 + skill 加载 |
 | OpenClaw | Experimental | 文件到位，未完成端到端验证 |

@@ -59,6 +59,13 @@ class InteractiveQAModeDocsTest(unittest.TestCase):
         self.assertNotIn("preferred_output", memory)
         self.assertNotIn("preferred_output", profile_example)
 
+    def test_recipe_generation_reads_memory_before_interactive_qa(self):
+        skill = (ROOT / "SKILL.md").read_text(encoding="utf-8")
+
+        self.assertIn("Before asking any Recipe Generation question", skill)
+        self.assertIn("run `scripts/cooking_memory.py read", skill)
+        self.assertIn("Do not state skill defaults such as 2 servings before this read completes", skill)
+
     def test_default_output_must_not_embed_kitchen_execution_body(self):
         skill = (ROOT / "SKILL.md").read_text(encoding="utf-8")
 
@@ -79,6 +86,9 @@ class InteractiveQAModeDocsTest(unittest.TestCase):
         self.assertIn("`~/.rookie-cooking/tmp/print-jobs/`", skill)
         self.assertIn("deletes the temporary kitchen Markdown after a successful render", skill)
         self.assertIn("does not duplicate an existing `-kitchen` suffix", skill)
+        self.assertIn("validate-kitchen-artifact", skill)
+        self.assertIn("火力/时间", skill)
+        self.assertIn("看到什么就下一步", skill)
 
     def test_default_mode_does_not_load_or_embed_kitchen_template(self):
         skill = (ROOT / "SKILL.md").read_text(encoding="utf-8")
@@ -126,6 +136,8 @@ class InteractiveQAModeDocsTest(unittest.TestCase):
         self.assertIn("OpenClaw", readme)
         self.assertIn("Hermes Agent", readme)
         self.assertIn("QA 模式", readme)
+        self.assertIn("Codex Default mode", readme)
+        self.assertIn("request_user_input", readme)
         self.assertIn("不阻塞生成", readme)
         self.assertIn("默认：完整解释版", readme)
         self.assertIn("厨房执行版：一页打印卡", readme)

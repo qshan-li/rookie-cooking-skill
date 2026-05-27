@@ -62,7 +62,7 @@ python scripts/run_agent_skill_qa.py acp-check --agent gemini --agent hermes --e
 
 当前本机能力边界：
 
-- Codex：通过 `acpx codex exec` 走 ACP client 的一次性会话。
+- Codex：通过 `acpx codex exec` 走 ACP client 的一次性会话。Codex Default mode 可能加载 skill 但不暴露 `request_user_input`；这种情况下按“不支持交互选择工具”判定，不应期待 QA 模式。
 - Claude Code：通过 `acpx claude exec` 走 Claude Code ACP adapter 的一次性会话。
 - Gemini CLI：通过 `acpx gemini exec` 或 `gemini --acp` 走 ACP。
 - Hermes Agent：通过 `acpx --agent "hermes acp --accept-hooks" exec` 走 raw ACP agent command。

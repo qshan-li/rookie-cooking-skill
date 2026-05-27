@@ -143,8 +143,90 @@ class AgentSkillQATest(unittest.TestCase):
 
         result = module.evaluate_output(
             module.TEST_CASES["B"],
-            "# 番茄炒蛋\n## 备料\n- 鸡蛋\n## 做法\n| 出错怎么办 |\n## 安全 / 补救\n请选择后续交付方式：生成 PDF、直接打印、暂不需要。",
+            (
+                "# 番茄炒蛋\n"
+                "## 备料\n"
+                "- 鸡蛋\n"
+                "## 做法\n"
+                "| 顺序 | 火力/时间 | 做什么 | 看到什么就下一步 | 出错怎么办 |\n"
+                "| --- | --- | --- | --- | --- |\n"
+                "| 1 | 中火 / 30 秒 | 倒蛋液 | 边缘凝固 | 火太大就离火 |\n"
+                "## 安全 / 补救\n"
+                "请选择后续交付方式：生成 PDF、直接打印、暂不需要。"
+            ),
         )
+
+        self.assertEqual("pass", result.status)
+
+    def test_kitchen_only_case_rejects_plain_step_list_without_print_card_table(self):
+        module = load_module()
+
+        result = module.evaluate_output(
+            module.TEST_CASES["B"],
+            (
+                "# 番茄炒蛋 厨房执行版\n"
+                "## 基本信息\n1 人份\n"
+                "## 原料\n- 鸡蛋 2 个\n"
+                "## 步骤\n"
+                "1. 热锅。\n"
+                "2. 倒蛋液炒到凝固。\n"
+                "## 安全\n鸡蛋要熟。\n"
+                "## 失败补救\n太老下次缩短时间。\n"
+                "请选择后续交付方式：生成 PDF、直接打印、暂不需要。"
+            ),
+        )
+
+        self.assertEqual("fail", result.status)
+        self.assertIn("kitchen print-card table", result.reason)
+
+    def test_kitchen_print_card_accepts_rendered_html_table(self):
+        module = load_module()
+
+        html = (
+            "<h2>备料</h2>"
+            "<table><thead><tr>"
+            "<th>顺序</th><th>火力/时间</th><th>做什么</th>"
+            "<th>看到什么就下一步</th><th>出错怎么办</th>"
+            "</tr></thead></table>"
+            "<h2>安全 / 补救</h2>"
+        )
+
+        self.assertTrue(module.has_kitchen_print_card_body(html))
+
+    def test_kitchen_print_card_rejects_rendered_html_plain_steps(self):
+        module = load_module()
+
+        html = (
+            "<h2>基本信息</h2><p>1 人份</p>"
+            "<h2>原料</h2><ul><li>鸡蛋 2 个</li></ul>"
+            "<h2>步骤</h2><ol><li>热锅。</li><li>倒蛋液。</li></ol>"
+            "<h2>安全</h2><p>鸡蛋要熟。</p>"
+            "<h2>失败补救</h2><p>太老下次缩短时间。</p>"
+        )
+
+        self.assertFalse(module.has_kitchen_print_card_body(html))
+
+    def test_validate_kitchen_artifact_maps_pdf_to_intermediate_html(self):
+        module = load_module()
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            pdf_path = root / "output" / "pdf" / "fan-qie-chao-dan-kitchen.pdf"
+            html_dir = root / "tmp" / "pdfs"
+            pdf_path.parent.mkdir(parents=True)
+            html_dir.mkdir(parents=True)
+            pdf_path.write_bytes(b"%PDF-1.4 fake")
+            (html_dir / "fan-qie-chao-dan.html").write_text(
+                (
+                    "<h2>备料</h2>"
+                    "<table><tr><th>火力/时间</th><th>做什么</th>"
+                    "<th>看到什么就下一步</th><th>出错怎么办</th></tr></table>"
+                    "<h2>安全 / 补救</h2>"
+                ),
+                encoding="utf-8",
+            )
+
+            result = module.validate_kitchen_artifact(pdf_path, html_dir)
 
         self.assertEqual("pass", result.status)
 

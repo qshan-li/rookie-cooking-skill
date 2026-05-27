@@ -52,6 +52,8 @@ When this skill prompts the user for a choice, follow this tool-selection rule:
 2. **Fallback**: if no such tool exists, emit a numbered plain-text message and ask the user to reply with the chosen number/answer for each question.
 3. **Batching**: if the tool supports multiple questions per call, combine all applicable questions into a single call; if only single-question, ask them one at a time in priority order.
 
+For Codex specifically, treat `request_user_input` as available only when it is listed in the current turn's available tools. Codex Default mode may load this skill without exposing a structured user-input tool; in that case, follow the fallback behavior for the relevant flow instead of attempting Interactive QA Mode.
+
 Do not use a plain-text question in Claude Code or any other runtime that supports structured choices.
 
 ## Confirmation Policy
@@ -86,6 +88,12 @@ Classify every possible question before asking it:
 - **Post-answer expansion**: Produce the core answer first, then offer relevant next actions.
 
 Do not turn the skill into a questionnaire. Ask only when the answer changes safety handling, output shape, persistence, shopping-list detail, delivery, or durable memory.
+
+## Recipe Generation Memory Preflight
+
+Before asking any Recipe Generation question, run `scripts/cooking_memory.py read --dish <recipe-id> --diners <member-id...>` for each identifiable dish, using the default memory root `~/.rookie-cooking/` unless `ROOKIE_COOKING_HOME` is set.
+
+This preflight happens before Interactive QA Mode, First-Run Adaptation Elicitation, delivery selection, or any statement of serving count, equipment, or taste defaults. Do not state skill defaults such as 2 servings before this read completes. If memory is found, use its serving count, equipment, taste, household members, dislikes, and relevant recipe feedback as the baseline for later QA wording and final output. If memory is missing or invalid, continue with skill defaults and mention that defaults are being used.
 
 ## Flow Matrix
 
@@ -169,6 +177,8 @@ PDF and printed output must use the kitchen execution version, not the full expl
 - **Output kitchen execution text**: Print the kitchen execution version in chat.
 
 Do not write one-off generated recipes to `recipes/`. That directory is only for maintained recipe content. For PDF or printing from a generated chat recipe, create a temporary kitchen execution artifact under `~/.rookie-cooking/tmp/print-jobs/`, derive a recipe-style pinyin slug matching maintained recipe filenames, then render it with `scripts/render_recipe_pdf.py --kitchen-markdown <path> --title <dish name> --output-stem <pinyin-slug>`. The renderer writes PDFs under `~/.rookie-cooking/output/pdf/` by default, deletes the temporary kitchen Markdown after a successful render, and does not duplicate an existing `-kitchen` suffix. PDF filenames should therefore be `<pinyin-slug>-kitchen.pdf`, matching the maintained recipe `.md` filename style.
+
+Before rendering a generated kitchen artifact, verify that it follows `templates/recipe-kitchen.md`: it must include `## 备料`, operation rows with `火力/时间`, `做什么`, `看到什么就下一步`, and `出错怎么办`, plus `## 安全 / 补救`. Run `python scripts/run_agent_skill_qa.py validate-kitchen-artifact <temporary-kitchen-markdown>` before PDF rendering. If validation fails, rewrite the temporary kitchen artifact into the table print-card structure before calling `scripts/render_recipe_pdf.py`.
 
 ## Troubleshooting Workflow
 
@@ -385,7 +395,7 @@ For user-imported recipes, use `references/recipe-import-rules.md` and `template
 ## Generation Workflow
 
 1. Identify the flow, serving count, and requested recipe output mode.
-2. Check whether local cooking memory is available through `scripts/cooking_memory.py read --dish <recipe-id> --diners <member-id...>`. The default memory root is `~/.rookie-cooking/`; `ROOKIE_COOKING_HOME` may override it.
+2. Before asking any Recipe Generation question, check whether local cooking memory is available through `scripts/cooking_memory.py read --dish <recipe-id> --diners <member-id...>`. The default memory root is `~/.rookie-cooking/`; `ROOKIE_COOKING_HOME` may override it.
 3. If memory exists, read only the fields relevant to the dish, equipment, servings, taste, household members, dislikes, or prior failures. Treat `pending-confirmation` feedback as a suggestion, not a default.
 4. If the runtime supports interactive choices and the Recipe Generation output mode is missing, enter Interactive QA Mode.
 5. If memory does not exist or the script reports invalid local memory, use First-Run Adaptation Elicitation before generating when interactive choices are available; otherwise continue with defaults. Do not block the requested recipe, diagnosis, explanation, meal plan, or import.
