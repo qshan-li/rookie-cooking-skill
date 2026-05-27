@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check rookie-cooking-skill structure, recipe quality gates, and validation status."""
+"""Check rookie-cooking structure, recipe quality gates, and validation status."""
 
 from __future__ import annotations
 

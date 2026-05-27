@@ -35,6 +35,10 @@ def parse_args() -> argparse.Namespace:
         help="Recipe title for --kitchen-markdown input.",
     )
     parser.add_argument(
+        "--output-stem",
+        help="Recipe-style filename stem for generated PDF and intermediate HTML.",
+    )
+    parser.add_argument(
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
@@ -103,6 +107,20 @@ def strip_kitchen_heading(kitchen_markdown: str) -> str:
     return kitchen_markdown.strip()
 
 
+def strip_leading_title(markdown_text: str) -> str:
+    lines = markdown_text.splitlines()
+    if not lines or not lines[0].startswith("# "):
+        return markdown_text.strip()
+
+    return "\n".join(lines[1:]).strip()
+
+
+def normalize_kitchen_markdown(kitchen_markdown: str) -> str:
+    if KITCHEN_HEADING in kitchen_markdown:
+        kitchen_markdown = extract_kitchen_section(kitchen_markdown)
+    return strip_leading_title(strip_kitchen_heading(kitchen_markdown))
+
+
 def kitchen_output_stem(stem: str) -> str:
     if stem.endswith("-kitchen"):
         return stem
@@ -112,7 +130,7 @@ def kitchen_output_stem(stem: str) -> str:
 def build_html(kitchen_markdown: str, css_text: str, title: str) -> str:
     escaped_title = html_lib.escape(title)
     body = markdown.markdown(
-        strip_kitchen_heading(kitchen_markdown),
+        normalize_kitchen_markdown(kitchen_markdown),
         extensions=["tables", "sane_lists"],
         output_format="html5",
     )
@@ -246,7 +264,8 @@ def main() -> None:
     kitchen_markdown_path = args.kitchen_markdown
 
     css_text = read_text(css_path)
-    output_stem, title, kitchen_markdown = render_source(args)
+    source_stem, title, kitchen_markdown = render_source(args)
+    output_stem = args.output_stem or source_stem
     html = build_html(kitchen_markdown, css_text, title)
 
     output_dir.mkdir(parents=True, exist_ok=True)

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run cross-agent QA checks for rookie-cooking-skill."""
+"""Run cross-agent QA checks for rookie-cooking."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ import subprocess
 import sys
 
 
-SKILL_NAME = "rookie-cooking-skill"
+SKILL_NAME = "rookie-cooking"
 
 
 @dataclass(frozen=True)
@@ -51,50 +51,56 @@ TEST_CASES = {
     "A": TestCase(
         "A",
         "Recipe Generation",
-        "Use $rookie-cooking-skill 生成番茄炒蛋。",
+        "Use $rookie-cooking 生成番茄炒蛋。",
         "Missing recipe output mode should trigger Interactive QA or default fallback.",
     ),
     "B": TestCase(
         "B",
         "Recipe Generation",
-        "Use $rookie-cooking-skill 生成番茄炒蛋，只要厨房版。",
+        "Use $rookie-cooking 生成番茄炒蛋，只要厨房版。",
         "Explicit kitchen-only request should not ask output-strength QA.",
     ),
     "C": TestCase(
         "C",
         "Recipe Generation",
-        "Use $rookie-cooking-skill 生成 2 人份青椒肉丝，选择默认。",
+        "Use $rookie-cooking 生成 2 人份青椒肉丝，选择默认。",
         "Explicit default request should output the full explanation version.",
     ),
     "D": TestCase(
         "D",
         "Recipe Generation",
-        "Use $rookie-cooking-skill 生成 4 人份红烧肉，家里是电磁炉，选择厨房执行版。",
+        "Use $rookie-cooking 生成 4 人份红烧肉，家里是电磁炉，选择厨房执行版。",
         "Explicit kitchen execution request should output kitchen execution steps.",
     ),
     "E": TestCase(
         "E",
         "Troubleshooting",
-        "Use $rookie-cooking-skill 诊断：我做的蒸蛋有很多蜂窝，表面还出水。",
+        "Use $rookie-cooking 诊断：我做的蒸蛋有很多蜂窝，表面还出水。",
         "Troubleshooting should not trigger output-strength QA.",
     ),
     "F": TestCase(
         "F",
         "Learning",
-        "Use $rookie-cooking-skill 为什么炒青菜会出水？",
+        "Use $rookie-cooking 为什么炒青菜会出水？",
         "Learning should explain the principle and not trigger Recipe Generation QA.",
     ),
     "G": TestCase(
         "G",
         "Meal Planning",
-        "Use $rookie-cooking-skill 两菜一汤给 3 个人，怎么安排？",
+        "Use $rookie-cooking 两菜一汤给 3 个人，怎么安排？",
         "Meal Planning should output schedule and conflicts, not Recipe Generation QA.",
     ),
     "H": TestCase(
         "H",
         "Recipe Import",
-        "Use $rookie-cooking-skill 把这个菜谱改写成新手版：鸡蛋两个，番茄两个，炒熟即可。",
+        "Use $rookie-cooking 把这个菜谱改写成新手版：鸡蛋两个，番茄两个，炒熟即可。",
         "Recipe Import should rewrite into draft schema, not output-strength QA.",
+    ),
+    "I": TestCase(
+        "I",
+        "Memory Init / Update",
+        "Use $rookie-cooking 以后默认 4 人份。",
+        "Memory update should show a write preview and require confirmation.",
     ),
 }
 
@@ -125,7 +131,7 @@ def local_install_checks(root: Path, home: Path) -> list[InstallCheck]:
     }
     hints = {
         "codex": "Install as a Codex skill/plugin or link/copy into a configured Codex skill source; root SKILL.md is not enough.",
-        "claude": "Use .claude/skills/rookie-cooking-skill/SKILL.md or ~/.claude/skills/rookie-cooking-skill/SKILL.md.",
+        "claude": "Use .claude/skills/rookie-cooking/SKILL.md or ~/.claude/skills/rookie-cooking/SKILL.md.",
         "gemini": "Run: gemini skills link <repo-path> --scope workspace --consent",
         "hermes": "Install or enable through hermes skills, then verify with: hermes skills list",
     }
@@ -151,10 +157,34 @@ def has_any(text: str, snippets: tuple[str, ...]) -> bool:
     return any(snippet in text for snippet in snippets)
 
 
+def final_answer_text(text: str) -> str:
+    lines = text.splitlines()
+    answer_start = 0
+    for index, line in enumerate(lines):
+        if line.startswith("[thinking]"):
+            answer_start = index + 1
+
+    answer_lines = lines[answer_start:]
+    while answer_lines:
+        first = answer_lines[0]
+        if first.startswith("[") or first.startswith(" ") or not first.strip():
+            answer_lines = answer_lines[1:]
+            continue
+        break
+
+    if answer_lines and answer_lines[-1].startswith("[done]"):
+        answer_lines = answer_lines[:-1]
+
+    final_text = "\n".join(answer_lines).strip()
+    if final_text:
+        return final_text
+    return text
+
+
 def has_delivery_choice(text: str) -> bool:
     return (
         has_any(text, ("请选择后续交付方式", "后续交付方式", "交付方式"))
-        and has_any(text, ("生成 PDF", "生成PDF"))
+        and has_any(text, ("生成 PDF", "生成PDF", "生成厨房执行版 PDF"))
         and "直接打印" in text
         and has_any(text, ("暂不需要", "不需要"))
     )
@@ -181,13 +211,95 @@ def has_default_adaptation_statement(text: str) -> bool:
     )
 
 
+def has_removed_recipe_output_mode(text: str) -> bool:
+    return has_any(text, ("快速输出", "精准输出", "输出强度", "Quick output", "Precise output"))
+
+
+def has_kitchen_section_heading(text: str) -> bool:
+    return has_any(text, ("\n## 厨房执行版", "\n# 厨房执行版")) or " 厨房执行版\n\n份量" in text
+
+
+def has_kitchen_print_card_body(text: str) -> bool:
+    return has_all(text, ("## 备料", "## 做法")) and has_any(text, ("出错怎么办", "## 安全 / 补救"))
+
+
+def has_kitchen_execution_output(text: str) -> bool:
+    return "厨房执行版" in text or has_kitchen_print_card_body(text)
+
+
+def has_kitchen_critical_checks(text: str) -> bool:
+    return has_any(text, ("安全", "食品安全")) and has_any(text, ("失败信号", "出错怎么办", "补救"))
+
+
+def has_safety_judgment(text: str) -> bool:
+    return has_any(text, ("安全判断", "安全分诊", "Safety Triage", "safety judgment"))
+
+
+def has_memory_action(text: str) -> bool:
+    return has_any(
+        text,
+        (
+            "Record feedback only",
+            "Save durable preference",
+            "Do not record",
+            "记录反馈",
+            "保存长期偏好",
+            "不要记录",
+        ),
+    )
+
+
+def has_learning_expansion(text: str) -> bool:
+    return has_any(
+        text,
+        (
+            "Full principle card",
+            "Explain through one dish",
+            "Diagnose my failed result",
+            "完整原理卡",
+            "结合一道菜",
+            "诊断",
+        ),
+    )
+
+
+def has_write_preview(text: str) -> bool:
+    return has_any(text, ("Write preview", "写入预览", "Will write")) and has_any(
+        text,
+        ("Confirm write", "Edit values", "Cancel", "确认写入", "编辑", "取消"),
+    )
+
+
+def has_shopping_mode_choice(text: str) -> bool:
+    return has_any(text, ("购物清单模式", "shopping list mode")) and has_any(
+        text,
+        ("完整购物清单", "Full shopping list"),
+    ) and has_any(text, ("缺货检查清单", "Missing-items checklist")) and has_any(
+        text,
+        ("跳过购物清单", "Skip shopping list"),
+    )
+
+
+def has_full_shopping_list_body(text: str) -> bool:
+    return has_any(text, ("### 主料", "| 食材 | 总量 |", "| ingredient | total"))
+
+
+def has_import_intent_split(text: str) -> bool:
+    return has_any(text, ("导入意图", "Import intent")) and has_any(
+        text,
+        ("持久化目标", "persistence target"),
+    ) and has_any(text, ("输出形态", "output shape"))
+
+
 def evaluate_output(test_case: TestCase, text: str) -> Evaluation:
+    text = final_answer_text(text)
+
     if test_case.case_id == "A":
-        if has_any(text, ("快速", "精准")):
+        if has_removed_recipe_output_mode(text):
             return Evaluation("fail", "interactive QA included removed recipe output modes")
-        if "## 厨房执行版" in text:
+        if has_kitchen_section_heading(text) or has_kitchen_print_card_body(text):
             return Evaluation("fail", "default output included kitchen execution body")
-        if has_all(text, ("默认", "厨房执行版")) and has_any(text, ("请选择", "选择输出模式", "输出模式")):
+        if has_all(text, ("默认", "厨房执行版")) and has_any(text, ("选择输出模式", "请选择菜谱输出模式", "菜谱输出模式")):
             if has_first_run_adaptation_choice(text):
                 return Evaluation("pass", "interactive QA choice presented with first-run adaptation")
             return Evaluation("fail", "interactive QA omitted first-run adaptation choice")
@@ -205,7 +317,7 @@ def evaluate_output(test_case: TestCase, text: str) -> Evaluation:
     if test_case.case_id == "B":
         if "完整解释版" in text:
             return Evaluation("fail", "kitchen-only request included full explanation")
-        if "厨房执行版" in text and has_any(text, ("安全", "失败信号")) and has_delivery_choice(text):
+        if has_kitchen_execution_output(text) and has_kitchen_critical_checks(text) and has_delivery_choice(text):
             return Evaluation("pass", "kitchen-only output retained critical checks")
         return Evaluation("fail", "missing kitchen execution output or delivery choice")
 
@@ -217,37 +329,51 @@ def evaluate_output(test_case: TestCase, text: str) -> Evaluation:
     if test_case.case_id == "D":
         if "完整解释版" in text:
             return Evaluation("fail", "kitchen execution request included full explanation")
-        if "厨房执行版" in text and has_delivery_choice(text):
+        if has_kitchen_execution_output(text) and has_delivery_choice(text):
             return Evaluation("pass", "explicit kitchen execution output produced with delivery choice")
         return Evaluation("fail", "explicit kitchen execution output missing kitchen version or delivery choice")
 
     if test_case.case_id == "E":
         if "输出模式" in text:
             return Evaluation("fail", "troubleshooting incorrectly triggered output-mode QA")
-        if has_any(text, ("原因", "可能")) and has_any(text, ("下次", "调整", "修正")):
-            return Evaluation("pass", "troubleshooting diagnosis produced")
-        return Evaluation("fail", "missing troubleshooting diagnosis")
+        if (
+            has_safety_judgment(text)
+            and has_any(text, ("原因", "可能"))
+            and has_any(text, ("下次", "调整", "修正"))
+            and has_memory_action(text)
+        ):
+            return Evaluation("pass", "troubleshooting diagnosis produced with safety and memory action")
+        return Evaluation("fail", "missing troubleshooting safety judgment, diagnosis, or memory action")
 
     if test_case.case_id == "F":
         if "输出模式" in text:
             return Evaluation("fail", "learning incorrectly triggered output-mode QA")
-        if has_any(text, ("原理", "水分", "锅温")):
-            return Evaluation("pass", "learning explanation produced")
-        return Evaluation("fail", "missing learning explanation")
+        if has_any(text, ("一句话解释", "短答", "原理", "水分", "锅温")) and has_learning_expansion(text):
+            return Evaluation("pass", "learning short answer produced with expansion choices")
+        return Evaluation("fail", "missing learning short answer or expansion choices")
 
     if test_case.case_id == "G":
         if "输出模式" in text:
             return Evaluation("fail", "meal planning incorrectly triggered output-mode QA")
-        if has_any(text, ("购物清单", "时间线", "排程", "设备冲突")):
+        if has_full_shopping_list_body(text) and not has_shopping_mode_choice(text):
+            return Evaluation("fail", "meal plan dumped full shopping list before mode choice")
+        if has_any(text, ("菜单", "menu")) and has_any(text, ("时间线", "排程", "厨房排程", "timeline")):
             return Evaluation("pass", "meal plan produced")
         return Evaluation("fail", "missing meal plan structure")
 
     if test_case.case_id == "H":
         if "输出模式" in text:
             return Evaluation("fail", "recipe import incorrectly triggered output-mode QA")
-        if has_any(text, ("draft", "完整解释版", "厨房执行版")):
-            return Evaluation("pass", "recipe import rewrite produced")
-        return Evaluation("fail", "missing imported recipe rewrite")
+        if has_import_intent_split(text) and has_any(text, ("draft", "完整解释版", "厨房执行版")):
+            return Evaluation("pass", "recipe import rewrite produced with import intent split")
+        return Evaluation("fail", "missing imported recipe import intent split")
+
+    if test_case.case_id == "I":
+        if "输出模式" in text:
+            return Evaluation("fail", "memory update incorrectly triggered output-mode QA")
+        if has_write_preview(text):
+            return Evaluation("pass", "memory update write preview produced")
+        return Evaluation("fail", "missing memory write preview")
 
     raise ValueError(f"Unknown test case: {test_case.case_id}")
 
@@ -335,11 +461,23 @@ def print_plan(root: Path, home: Path, output_dir: Path) -> int:
     print("# Agent Skill QA Harness Plan\n")
     print("## Local install checks\n")
     print_install_checks(root, home)
+    print("\n## Test cases\n")
+    print("| Case | Flow | Expectation |")
+    print("| --- | --- | --- |")
+    for test_case in TEST_CASES.values():
+        print(f"| {test_case.case_id} | {test_case.flow} | {test_case.expectation} |")
     print("\n## Headless commands\n")
+    first_case = next(iter(TEST_CASES.values()))
     for agent in AGENTS:
-        command = build_headless_command(agent, TEST_CASES["A"].prompt, root, output_dir / f"{agent}-A.txt")
+        command = build_headless_command(
+            agent,
+            first_case.prompt,
+            root,
+            output_dir / f"{agent}-{first_case.case_id}.txt",
+        )
         availability = "available" if command_available(command) else "missing executable"
-        print(f"- {agent} ({availability}): {' '.join(command)}")
+        print(f"- {agent} example ({availability}): {' '.join(command)}")
+    print("\nRun without --case to execute the full A-I case matrix.")
     print("\n## ACP checks\n")
     for agent in AGENTS:
         command = build_acp_check_command(agent)

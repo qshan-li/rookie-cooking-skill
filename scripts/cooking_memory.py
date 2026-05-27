@@ -64,10 +64,7 @@ def default_profile() -> dict[str, Any]:
     return {
         "profile_version": 1,
         "updated_at": datetime.now().date().isoformat(),
-        "defaults": {
-            "servings": 2,
-            "preferred_output": "full-explanation",
-        },
+        "defaults": {"servings": 2},
         "taste": {
             "salt_level": "normal",
             "oil_level": "normal",
@@ -509,10 +506,35 @@ def adjustment_for_issue(issue: str) -> dict[str, Any]:
             "sugar_multiplier": 0.85,
             "note": "Reduce sugar first next time, then adjust to taste.",
         }
+    if issue == "too_bland":
+        return {
+            "salt_multiplier": 1.1,
+            "note": "Increase seasoning slightly and check taste before serving.",
+        }
+    if issue == "too_watery":
+        return {
+            "batch_size_multiplier": 0.8,
+            "note": "Cook a smaller batch, drain ingredients better, and add salt later.",
+        }
+    if issue == "burnt":
+        return {
+            "heat_level_note": "lower_heat",
+            "note": "Lower heat, stir sooner, and add sugar later when relevant.",
+        }
+    if issue == "undercooked":
+        return {
+            "cook_time_multiplier": 1.15,
+            "note": "Extend cooking time and use smaller cuts for safer doneness.",
+        }
     if issue == "meat_dry":
         return {
             "cook_time_multiplier": 0.9,
             "note": "Shorten the final heating stage and check doneness earlier.",
+        }
+    if issue == "separated":
+        return {
+            "heat_level_note": "gentler_heat",
+            "note": "Use gentler heat and adjust mixing or water ratio.",
         }
     return {
         "adjustment_note": f"Review issue before changing durable preferences: {issue}",

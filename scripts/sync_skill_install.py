@@ -10,7 +10,7 @@ import shutil
 import sys
 
 
-SKILL_NAME = "rookie-cooking-skill"
+SKILL_NAME = "rookie-cooking"
 EXCLUDED_NAMES = {
     ".git",
     ".agents",
@@ -101,7 +101,7 @@ def sync_skill(source: Path, home: Path, include_agent_links: bool = True) -> Sy
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Sync rookie-cooking-skill into local agent skill directories.")
+    parser = argparse.ArgumentParser(description="Sync rookie-cooking into local agent skill directories.")
     parser.add_argument("--source", type=Path, default=Path("."), help="Skill repository root.")
     parser.add_argument("--home", type=Path, default=Path.home(), help="Home directory containing agent skill dirs.")
     parser.add_argument(
