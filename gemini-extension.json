@@ -1,0 +1,6 @@
+{
+  "name": "rookie-cooking",
+  "version": "1.0.0",
+  "description": "Turn vague cooking instructions into executable kitchen documents for beginners.",
+  "contextFileName": "SKILL.md"
+}

@@ -7,6 +7,22 @@ description: >-
   or printable kitchen versions.
 version: 1.0.0
 homepage: https://github.com/qshan-li/rookie-cooking-skill
+when_to_use: >-
+  Use this skill when the user asks to cook a dish, needs a recipe with exact measurements,
+  wants to diagnose a cooking failure, learn a cooking principle, plan a meal, import a recipe,
+  or initialize cooking preferences. Trigger on keywords like "recipe", "cook", "做菜", "菜谱",
+  "烹饪", "做饭", "炒", "炖", "蒸", "烤".
+metadata:
+  openclaw:
+    requires:
+      bins:
+        - python3
+  hermes:
+    tags:
+      - cooking
+      - recipe
+      - food
+    related_skills: []
 ---
 
 # Rookie Cooking
@@ -144,7 +160,7 @@ The delivery choices are:
 - **Direct print**: Print the kitchen execution PDF after printer selection.
 - **No delivery**: End after the chat output.
 
-PDF and printed output must use the kitchen execution version, not the full explanation version. If the user chooses direct printing, ask them to choose a printer device before printing. List available printers before asking for the device. If no printer service or printer device is available, use an interactive choice tool again with these fallback choices:
+PDF and printed output must use the kitchen execution version, not the full explanation version. If the user chooses direct printing, ask them to choose a printer device before printing. List available printers before asking for the device. Direct printing supports network printers via IPP (port 631) without requiring CUPS; on WSL, printer discovery is automatic via PowerShell. Use `--set-default <ip>` to pre-configure a printer for future sessions, and `--test-printer <ip>` to verify connectivity. If no printer service or printer device is available, use an interactive choice tool again with these fallback choices:
 
 - **Generate PDF**: Create the PDF for the user to open and print elsewhere.
 - **Output kitchen execution text**: Print the kitchen execution version in chat.

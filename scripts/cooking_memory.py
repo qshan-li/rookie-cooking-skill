@@ -13,6 +13,8 @@ import re
 import sys
 from typing import Any
 
+import yaml
+
 
 PROFILE_FILE = "profile.yaml"
 FEEDBACK_FILE = "feedback.jsonl"
@@ -132,175 +134,15 @@ def default_profile() -> dict[str, Any]:
     }
 
 
-def parse_scalar(raw_value: str) -> Any:
-    value = raw_value.strip()
-    if value == "":
-        return ""
-    if value == "[]":
-        return []
-    if value == "{}":
-        return {}
-    if value in {"true", "True"}:
-        return True
-    if value in {"false", "False"}:
-        return False
-    if value in {"null", "None"}:
-        return None
-    if value[0:1] in {'"', "'"}:
-        try:
-            return json.loads(value)
-        except json.JSONDecodeError:
-            return value.strip("\"'")
-    try:
-        return int(value)
-    except ValueError:
-        pass
-    try:
-        return float(value)
-    except ValueError:
-        return value
-
-
-def format_scalar(value: Any) -> str:
-    if value is True:
-        return "true"
-    if value is False:
-        return "false"
-    if value is None:
-        return "null"
-    if value == []:
-        return "[]"
-    if value == {}:
-        return "{}"
-    if isinstance(value, (int, float)):
-        return str(value)
-    return json.dumps(str(value), ensure_ascii=False)
-
-
-def yaml_lines(data: Any, indent: int = 0) -> list[str]:
-    space = " " * indent
-    if isinstance(data, dict):
-        lines: list[str] = []
-        for key, value in data.items():
-            if isinstance(value, (dict, list)) and value:
-                lines.append(f"{space}{key}:")
-                lines.extend(yaml_lines(value, indent + 2))
-            else:
-                lines.append(f"{space}{key}: {format_scalar(value)}")
-        return lines
-    if isinstance(data, list):
-        lines = []
-        for item in data:
-            if isinstance(item, (dict, list)) and item:
-                lines.append(f"{space}-")
-                lines.extend(yaml_lines(item, indent + 2))
-            else:
-                lines.append(f"{space}- {format_scalar(item)}")
-        return lines
-    return [f"{space}{format_scalar(data)}"]
-
-
-def dump_yaml(data: dict[str, Any]) -> str:
-    return "\n".join(yaml_lines(data)) + "\n"
-
-
-def prepared_yaml_lines(text: str) -> list[tuple[int, str]]:
-    prepared: list[tuple[int, str]] = []
-    for raw_line in text.splitlines():
-        if not raw_line.strip() or raw_line.lstrip().startswith("#"):
-            continue
-        indent = len(raw_line) - len(raw_line.lstrip(" "))
-        prepared.append((indent, raw_line[indent:].rstrip()))
-    return prepared
-
-
-def parse_yaml_block(lines: list[tuple[int, str]], index: int, indent: int) -> tuple[Any, int]:
-    if index >= len(lines):
-        return {}, index
-
-    current_indent, content = lines[index]
-    if current_indent < indent:
-        return {}, index
-    if current_indent > indent:
-        raise MemoryDataError(f"Unexpected indentation before: {content}")
-
-    if content == "-" or content.startswith("- "):
-        items: list[Any] = []
-        while index < len(lines):
-            current_indent, content = lines[index]
-            if current_indent != indent or not (content == "-" or content.startswith("- ")):
-                break
-            item_text = "" if content == "-" else content[2:].strip()
-            index += 1
-            if not item_text:
-                item, index = parse_yaml_block(lines, index, indent + 2)
-                items.append(item)
-                continue
-
-            if ":" in item_text:
-                key, raw_value = split_mapping_line(item_text)
-                item_dict: dict[str, Any] = {}
-                if raw_value:
-                    item_dict[key] = parse_scalar(raw_value)
-                else:
-                    item_dict[key], index = parse_yaml_block(lines, index, indent + 2)
-                if index < len(lines) and lines[index][0] > indent:
-                    nested, index = parse_yaml_block(lines, index, indent + 2)
-                    if isinstance(nested, dict):
-                        item_dict.update(nested)
-                    else:
-                        raise MemoryDataError(f"List item cannot merge nested value: {item_text}")
-                items.append(item_dict)
-            else:
-                items.append(parse_scalar(item_text))
-        return items, index
-
-    mapping: dict[str, Any] = {}
-    while index < len(lines):
-        current_indent, content = lines[index]
-        if current_indent != indent or content == "-" or content.startswith("- "):
-            break
-        key, raw_value = split_mapping_line(content)
-        index += 1
-        if raw_value:
-            mapping[key] = parse_scalar(raw_value)
-        elif index < len(lines) and lines[index][0] > indent:
-            mapping[key], index = parse_yaml_block(lines, index, indent + 2)
-        else:
-            mapping[key] = {}
-    return mapping, index
-
-
-def split_mapping_line(content: str) -> tuple[str, str]:
-    if ":" not in content:
-        raise MemoryDataError(f"Expected key: value line, got: {content}")
-    key, raw_value = content.split(":", 1)
-    key = key.strip()
-    if not key:
-        raise MemoryDataError(f"Missing key before colon in line: {content}")
-    return key, raw_value.strip()
-
-
-def load_yaml(text: str) -> dict[str, Any]:
-    lines = prepared_yaml_lines(text)
-    if not lines:
-        return {}
-    data, index = parse_yaml_block(lines, 0, lines[0][0])
-    if index != len(lines):
-        raise MemoryDataError(f"Unable to parse line: {lines[index][1]}")
-    if not isinstance(data, dict):
-        raise MemoryDataError("Profile root must be a mapping")
-    return data
-
-
 def read_profile(root: Path) -> dict[str, Any]:
     path = profile_path(root)
     try:
-        profile = load_yaml(path.read_text(encoding="utf-8"))
+        text = path.read_text(encoding="utf-8")
+        profile = yaml.safe_load(text)
+    except yaml.YAMLError as error:
+        raise MemoryDataError(f"Malformed profile.yaml: {error}") from error
     except OSError as error:
         raise MemoryDataError(f"Unable to read profile.yaml: {error}") from error
-    except MemoryDataError as error:
-        raise MemoryDataError(f"Malformed profile.yaml: {error}") from error
     if not isinstance(profile, dict):
         raise MemoryDataError("Malformed profile.yaml: root must be a mapping")
     return profile
@@ -310,7 +152,10 @@ def write_profile(root: Path, profile: dict[str, Any]) -> None:
     root.mkdir(parents=True, exist_ok=True)
     path = profile_path(root)
     tmp_path = root / f"{PROFILE_FILE}.tmp"
-    tmp_path.write_text(dump_yaml(profile), encoding="utf-8")
+    tmp_path.write_text(
+        yaml.dump(profile, allow_unicode=True, default_flow_style=False, sort_keys=False),
+        encoding="utf-8",
+    )
     os.replace(tmp_path, path)
 
 
@@ -455,7 +300,10 @@ def path_is_sensitive(dotted_path: str) -> bool:
 
 def coerce_assignment_value(value: Any) -> Any:
     if isinstance(value, str):
-        return parse_scalar(value)
+        try:
+            return yaml.safe_load(value)
+        except yaml.YAMLError:
+            return value
     return value
 
 

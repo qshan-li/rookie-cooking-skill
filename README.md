@@ -117,8 +117,8 @@ rookie-cooking-skill/
 ├── SKILL.md                    # Skill 入口：触发条件、默认假设、工作流和资源导航
 ├── agents/openai.yaml          # Agent 展示名、短描述和默认调用提示
 ├── templates/                  # 菜谱、厨房版、原理卡、失败诊断和 review 模板
-├── recipes/                    # 已整理菜谱（385+ 道），按类别分组
-├── principles/                 # 可复用烹饪原理卡（10 张核心原理）
+├── recipes/                    # 已整理菜谱（385 道），按类别分组
+├── principles/                 # 可复用烹饪原理卡（22 张）
 ├── references/                 # 火力、换算、设备、缩放、安全、记忆层和来源规则
 ├── scripts/                    # 校验、记忆、PDF 渲染和厨房实测记录工具
 ├── tests/                      # Python unittest 测试
@@ -200,4 +200,4 @@ python scripts/apply_kitchen_validation.py \
 
 ## License
 
-当前仓库尚未声明许可证。对外发布或接受外部贡献前，应先补充明确的 `LICENSE` 文件。
+[MIT License](LICENSE)。
