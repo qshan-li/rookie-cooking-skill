@@ -1,8 +1,8 @@
-# rookie-cooking-skill
+# rookie-cooking
 
 **让烹饪从“随缘”走向“可执行”：一套面向 AI Agent 的工程化烹饪执行系统。**
 
-`rookie-cooking-skill` 致力于消除中餐菜谱中诸如“适量”、“大火”、“炒熟”等模糊表述。它不仅是一个菜谱库，更是一个深度结构化的 **Agent Skill**。通过将传统烹饪中的隐性经验拆解为精确的克数/毫升、时间区间、火力等级、目标状态判定、失败信号预警以及底层的烹饪原理，它赋予了 AI Agent 辅助新手在厨房完成“精准执行、故障诊断、原理迁移”的全链路能力。
+`rookie-cooking` 致力于消除中餐菜谱中诸如“适量”、“大火”、“炒熟”等模糊表述。它不仅是一个菜谱库，更是一个深度结构化的 **Agent Skill**。通过将传统烹饪中的隐性经验拆解为精确的克数/毫升、时间区间、火力等级、目标状态判定、失败信号预警以及底层的烹饪原理，它赋予了 AI Agent 辅助新手在厨房完成“精准执行、故障诊断、原理迁移”的全链路能力。
 
 ## Core Values
 
@@ -15,18 +15,26 @@
 
 ## What It Does
 
-`rookie-cooking-skill` 让支持 Skill 的 AI agent 生成、改写、检查、诊断和排程家常菜谱。它的默认输出不是一句“炒熟即可”，而是一份能放到厨房台面上执行的文档。
+`rookie-cooking` 让支持 Skill 的 AI agent 生成、改写、检查、诊断和排程家常菜谱。它的默认输出不是一句“炒熟即可”，而是一份能放到厨房台面上执行的文档。
 
 核心能力：
 
 - 完整解释版：适合做饭前阅读，解释每一步为什么这样做。
-- 厨房执行版：适合打印或放在手机上边做边看，保留关键步骤、时间、火力和状态判断。
+- 厨房执行版：适合打印或放在手机上边做边看，采用一页打印卡，保留备料、火力/时间、目标状态和出错补救。
 - 失败诊断：把“太咸”“出水”“肉柴”“蛋羹蜂窝”等结果映射到可能原因和下次调整。
 - 原理链接：把单道菜的操作连接到可复用的烹饪原理卡。
 - 一餐规划：合并多道菜的购物清单、厨房排程、设备冲突和检查节点。
 - 菜谱导入：把用户粘贴、外部链接或自创菜谱改写成本项目结构，初始状态为 `draft`。
 - 记忆适配：按用户设备、人数、口味、忌口和历史反馈调整输出，但不把一次性请求静默写成长期偏好。
 - 安全提示：肉、蛋、海鲜、剩菜、解冻、复热和生熟分开优先于口感建议。
+
+交互原则：
+
+- 先判断流程，再决定是否需要提问。
+- 只有安全、持久化、输出形态、购物清单细节、交付方式或长期记忆会被改变时才 elicitation。
+- 能用默认值交付有用结果时，不把用户挡在问卷前面。
+- Learning 默认先给短答；Meal Planning 先推断规划模式；Recipe Import 先区分持久化目标和输出形态。
+- Troubleshooting 先做安全分诊，再给口感或参数调整，并把反馈写入候选记忆前要求确认。
 
 默认假设见 [`references/defaults.md`](references/defaults.md)：2 人份、普通炒锅或煎锅、燃气灶或电磁炉、有手机计时器、有厨房秤，同时提供无秤判断。
 
@@ -39,7 +47,7 @@
 输出模式：
 
 - 默认：完整解释版；生成完成后询问是否需要 PDF 或直接打印。
-- 厨房执行版：可扫读步骤；生成完成后询问是否需要 PDF 或直接打印。
+- 厨房执行版：一页打印卡；生成完成后询问是否需要 PDF 或直接打印。
 
 两个模式后续都可以生成 PDF 或直接打印；PDF / 纸质内容使用厨房执行版。如果运行在 Codex、Claude Code、OpenClaw、Hermes Agent 等支持交互选择的 agent 终端中，且用户没有指定输出模式，Skill 会进入 QA 模式，让用户先选择默认或厨房执行版。若当前 agent 没有选项选择工具，则不阻塞生成，直接使用默认输出模式并简要说明假设。
 
@@ -49,23 +57,23 @@
 
 ### Troubleshooting
 
-用户反馈“肉柴了”“蒸蛋有蜂窝”“青菜出水”。Skill 会给出可能原因、风险判断和下次调整方案。
+用户反馈“肉柴了”“蒸蛋有蜂窝”“青菜出水”。Skill 会先做安全分诊，再给出可能原因、风险判断和下次调整方案。诊断后可选择只记录本次反馈、保存长期偏好或不记录。
 
 ### Learning
 
-用户问“为什么要上浆”“为什么要热锅冷油”“盐为什么会让黄瓜出水”。Skill 会输出原理卡，并链接到能练习这个原理的菜。
+用户问“为什么要上浆”“为什么要热锅冷油”“盐为什么会让黄瓜出水”。Skill 默认先短答，并链接到能练习这个原理的菜；用户可以继续要求完整原理卡、结合一道菜解释或转入失败诊断。
 
 ### Meal Planning
 
-用户问“一顿饭怎么安排”“两菜一汤给 3 个人”。Skill 会输出菜单、合并购物清单、厨房时间线、设备冲突和长等待步骤的闹钟建议。
+用户问“一顿饭怎么安排”“两菜一汤给 3 个人”。Skill 会先推断是按指定菜、按现有食材还是从菜谱推荐，再输出菜单、厨房时间线、设备冲突和长等待步骤的闹钟建议。完整购物清单仍需先选择清单模式。
 
 ### Recipe Import
 
-用户粘贴菜谱、外部链接摘要或自创做法。Skill 会识别模糊词和缺失参数，按模板改写成完整解释版和厨房执行版；导入菜谱默认是 `draft`，通过 review 后才可标记为 `passed`。
+用户粘贴菜谱、外部链接摘要或自创做法。Skill 会先区分持久化目标：只在本次对话改写、保存为 `draft`、或 review existing draft；再按完整解释版、厨房执行版或 PDF / 打印处理输出形态。导入菜谱默认是 `draft`，通过 review 后才可标记为 `passed`。
 
 ### Memory Init / Update
 
-用户明确说“初始化我的做菜偏好”或“以后默认少辣”。Skill 才会进入偏好初始化或更新流程，记录会改变菜谱参数的信息，例如默认人数、灶具、锅具、是否有秤、是否有温度计、咸淡油辣偏好、忌口和家庭成员。
+用户明确说“初始化我的做菜偏好”或“以后默认少辣”。Skill 才会进入偏好初始化或更新流程，记录会改变菜谱参数的信息，例如默认人数、灶具、锅具、是否有秤、是否有温度计、咸淡油辣偏好、忌口和家庭成员。长期写入前会展示写入预览，并让用户确认写入、编辑或取消。
 
 ## Memory Behavior
 
@@ -104,8 +112,8 @@ python scripts/cooking_memory.py view
 把本仓库作为一个本地 Skill 目录提供给你的 agent。Skill 入口是 [`SKILL.md`](SKILL.md)，展示配置在 [`agents/openai.yaml`](agents/openai.yaml)。
 
 ```bash
-git clone <this-repository-url> rookie-cooking-skill
-cd rookie-cooking-skill
+git clone <this-repository-url> rookie-cooking
+cd rookie-cooking
 python -m unittest discover -s tests
 python scripts/check_skill_completeness.py
 python scripts/sync_skill_install.py
@@ -114,36 +122,36 @@ python scripts/sync_skill_install.py
 通用安装要求：
 
 - 让 agent 能发现本目录。
-- 让 agent 在触发 `$rookie-cooking-skill` 时读取根目录的 [`SKILL.md`](SKILL.md)。
+- 让 agent 在触发 `$rookie-cooking` 时读取根目录的 [`SKILL.md`](SKILL.md)。
 - 如果 agent 支持展示元数据，可读取 [`agents/openai.yaml`](agents/openai.yaml)。
 - 如果需要本地 personal skill，可把本仓库复制或软链接到对应 agent 的 skills 目录。
 
 调用示例：
 
 ```text
-Use $rookie-cooking-skill 生成 2 人份番茄炒蛋，厨房只有电磁炉和不粘锅。
+Use $rookie-cooking 生成 2 人份番茄炒蛋，厨房只有电磁炉和不粘锅。
 ```
 
 ```text
-Use $rookie-cooking-skill 诊断：我做的蒸蛋有很多蜂窝，表面还出水。
+Use $rookie-cooking 诊断：我做的蒸蛋有很多蜂窝，表面还出水。
 ```
 
 ```text
-Use $rookie-cooking-skill 把红烧肉改成 4 人份，并给我可打印厨房版。
+Use $rookie-cooking 把红烧肉改成 4 人份，并给我可打印厨房版。
 ```
 
 ```text
-Use $rookie-cooking-skill 初始化我的做菜偏好。
+Use $rookie-cooking 初始化我的做菜偏好。
 ```
 
 PDF 渲染是可选能力，需要本机有 Chrome 或 Chromium，并能导入 Python `markdown` 包：
 
 ```bash
 python scripts/render_recipe_pdf.py recipes/vegetable/fan-qie-chao-dan.md
-python scripts/render_recipe_pdf.py --kitchen-markdown ~/.rookie-cooking/tmp/print-jobs/tang-cu-pai-gu.md --title 糖醋排骨
+python scripts/render_recipe_pdf.py --kitchen-markdown ~/.rookie-cooking/tmp/print-jobs/print-job.md --title 糖醋排骨 --output-stem tang-cu-pai-gu
 ```
 
-默认 PDF 输出目录是 `~/.rookie-cooking/output/pdf/`，中间 HTML 文件写入 `~/.rookie-cooking/tmp/pdfs/`。
+默认 PDF 输出目录是 `~/.rookie-cooking/output/pdf/`，中间 HTML 文件写入 `~/.rookie-cooking/tmp/pdfs/`。已有菜谱文件会沿用 `.md` 文件名，例如 `fan-qie-chao-dan.md` 输出 `fan-qie-chao-dan-kitchen.pdf`；一次性生成的临时厨房稿应显式传入 `--output-stem <pinyin-slug>`，保持同样的汉语拼音文件名风格。
 
 直接打印会先生成厨房执行版 PDF，再调用系统 `lp` 或 `lpr`：
 
@@ -196,7 +204,7 @@ python -m unittest discover -s tests
 python scripts/check_skill_completeness.py
 ```
 
-跨 agent 测试 Recipe Generation 的 QA 模式：
+跨 agent 检查全功能 QA harness：
 
 ```bash
 python scripts/run_agent_skill_qa.py plan
@@ -204,11 +212,13 @@ python scripts/run_agent_skill_qa.py check-install
 python scripts/run_agent_skill_qa.py acp-check
 ```
 
-真实调用 agent 时再运行：
+真实调用 agent 时可先跑单场景，再跑全矩阵：
 
 ```bash
 python scripts/run_agent_skill_qa.py run-acp --agent gemini --case A
 python scripts/run_agent_skill_qa.py run-headless --agent codex --case A
+python scripts/run_agent_skill_qa.py run-acp --agent gemini
+python scripts/run_agent_skill_qa.py run-headless --agent codex
 ```
 
 `run-acp` 使用 `acpx <agent> exec` 的一次性会话，不依赖已有 `acpx` session，避免多次测试之间串上下文。
@@ -254,7 +264,7 @@ python scripts/prepare_benchmark_validation.py
 - 精确，但不伪精确：给默认值、范围、状态判断和调整规则，不把不稳定变量写成唯一答案。
 - 操作优先：原理只服务执行、判断、纠错和迁移。
 - 安全优先：安全建议和口感建议冲突时，保留安全底线并说明口感取舍。
-- 厨房友好：厨房执行版要能在手上有水或油时快速扫读。
+- 厨房友好：厨房执行版要能在手上有水或油时快速扫读，优先保持一页打印卡结构。
 - 可复盘：失败不是“没天赋”，而是可观察信号、原因假设和下次修正。
 
 ## Sources, License, And Thanks
@@ -264,7 +274,7 @@ python scripts/prepare_benchmark_validation.py
 本项目在此基础上做了结构化改写，而不是直接复制长段原文：
 
 - 将原菜谱的基础食材、用量和操作顺序作为参考。
-- 按本 Skill 模板补充克数 / ml、时间区间、火力描述、目标状态、失败信号、替代方案、食品安全提示和相关原理。
+- 按本 Skill 模板补充克数 / ml、时间区间、火力描述、目标状态、出错补救、替代方案、食品安全提示和相关原理。
 - 为每道参考菜谱记录上游 URL、检查日期、许可证依据、改写程度和可信度，详见 [`references/source-notes.md`](references/source-notes.md)。
 
 感谢 HowToCook 作者和社区维护者整理了大量清晰、开放的中文家常菜资料。本仓库的目标是在尊重其开源协议的基础上，把这些菜谱进一步改写成适合 AI agent 生成、适配、打印和复盘的厨房执行文档。

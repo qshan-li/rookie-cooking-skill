@@ -1,7 +1,7 @@
 interface:
   display_name: "新手做菜 Skill"
   short_description: "把模糊菜谱转成可执行厨房文档"
-  default_prompt: "Use $rookie-cooking-skill to turn a home-cooking dish into a beginner-friendly full recipe and printable kitchen version."
+  default_prompt: "Use $rookie-cooking to turn a home-cooking dish into a beginner-friendly full recipe and printable kitchen version."
 
 policy:
   allow_implicit_invocation: true
